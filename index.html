@@ -663,6 +663,96 @@
       `;
     }
 
+    function openPaymentPoDetail(type) {
+      state.payment.poDetail = type;
+      renderPayment();
+    }
+
+    function closePaymentPoDetail() {
+      state.payment.poDetail = '';
+      renderPayment();
+    }
+
+    function renderPaymentPoDetailModal(a) {
+      const type = state.payment.poDetail;
+      if (!type) return '';
+
+      const config = {
+        po: { title: '총 PO금액 구성 상세', key: a.poTotalKey, desc: '결제_PO관리 탭의 총 PO금액 기준' },
+        notInbound: { title: '미입고 물품금액 구성 상세', key: a.poNotInboundKey, desc: '결제_PO관리 탭의 미입고 물품금액 기준' },
+        unpaid: { title: '물품 미결제 잔액 구성 상세', key: a.poUnpaidBalanceKey, desc: '결제_PO관리 탭의 물품미결제잔액(외화) 기준' }
+      }[type];
+
+      const rows = (a.poObjects || []).map(o => {
+        const currency = (() => {
+          const raw = a.poCurrencyKey ? String(o[a.poCurrencyKey] || '').trim().toUpperCase() : 'USD';
+          return raw.includes('RMB') || raw.includes('CNY') || raw.includes('위안') || raw.includes('元') || raw.includes('¥') ? 'RMB' : 'USD';
+        })();
+        const rate = currency === 'RMB' ? 210 : 1500;
+        const foreign = toNum(o[config.key]);
+        const krw = Math.round(foreign * rate);
+        return {
+          date: o[a.dateKey] || '',
+          po: o[a.poNumberKey] || '',
+          vendor: a.poVendorKey ? (o[a.poVendorKey] || '거래처 미지정') : '거래처 미지정',
+          product: a.poProductKey ? (o[a.poProductKey] || '품목 미지정') : '품목 미지정',
+          currency,
+          rate,
+          foreign,
+          krw,
+          remainQty: a.poRemainQtyKey ? toNum(o[a.poRemainQtyKey]) : (o._row ? toNum(o._row[16]) : 0)
+        };
+      }).filter(r => r.foreign !== 0 || r.krw !== 0).sort((x,y)=>y.krw-x.krw);
+
+      const total = rows.reduce((s,r)=>s+r.krw,0);
+      const vendorSummary = Object.values(rows.reduce((m,r)=>{
+        if (!m[r.vendor]) m[r.vendor] = { name:r.vendor, value:0, qty:0 };
+        m[r.vendor].value += r.krw;
+        m[r.vendor].qty += 1;
+        return m;
+      }, {})).sort((a,b)=>b.value-a.value);
+
+      return `
+        <div class="modal-backdrop" onclick="closePaymentPoDetail()">
+          <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-head">
+              <div>
+                <div class="card-title">${config.title}</div>
+                <div class="card-sub">${config.desc} / 통화열 기준 USD 1,500원 · RMB 210원</div>
+              </div>
+              <button class="modal-close" onclick="closePaymentPoDetail()">닫기</button>
+            </div>
+            <div class="flow-summary" style="margin-bottom:18px;">
+              <div class="pill">총 금액 ${money(total)}</div>
+              <div class="pill">구성 행 ${fmt(rows.length)}건</div>
+              <div class="pill">클릭한 카드 기준 상세</div>
+            </div>
+            <article class="card full" style="margin-bottom:16px;">
+              <div class="card-head"><div><div class="card-title">거래처별 구성</div><div class="card-sub">금액 큰 순</div></div></div>
+              ${renderProductRankChart(vendorSummary, 8)}
+            </article>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>거래처</th><th>품목</th><th>PO번호</th><th>통화</th><th class="right">외화</th><th class="right">환율</th><th class="right">원화환산</th><th class="right">잔여수량</th></tr></thead>
+                <tbody>${rows.map(r=>`
+                  <tr>
+                    <td>${r.vendor}</td>
+                    <td>${r.product}</td>
+                    <td>${r.po || '-'}</td>
+                    <td>${r.currency}</td>
+                    <td class="right">${r.currency === 'RMB' ? '¥' : '$'}${fmt(r.foreign)}</td>
+                    <td class="right">${fmt(r.rate)}</td>
+                    <td class="right">${money(r.krw)}</td>
+                    <td class="right">${fmt(r.remainQty)}</td>
+                  </tr>
+                `).join('') || '<tr><td colspan="8" class="muted">표시할 상세 데이터가 없습니다.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderBarChart(data, valueKey, labelKey = 'date', options = {}) {
       const baseItems = options.hideZero ? data.filter(r => Number(r[valueKey] || 0) > 0) : data;
       const items = options.limit ? baseItems.slice(-options.limit) : baseItems;
@@ -1667,7 +1757,31 @@
       const poAdvanceKey = findHeader(poHeaders, ['총선급금(외화)','총선급금','선급금']);
       const poInboundPaidKey = findHeader(poHeaders, ['누적입고물품금액(외화)','누적입고물품금액','입고물품금액']);
       const poNotInboundKey = findHeader(poHeaders, ['미입고물품금액(외화)','미입고물품금액','미입고금액']);
+      const poUnpaidBalanceKey = findHeader(poHeaders, ['물품미결제잔액(외화)','물품미결제잔액','미결제잔액','미지급잔액']);
       const poRemainQtyKey = findHeader(poHeaders, ['잔여수량','미입고수량','남은수량','잔량']) || poHeaders[16];
+      const poCurrencyKey = findHeader(poHeaders, ['통화','currency','curr','화폐']);
+      const poVendorKey = findHeader(poHeaders, ['거래처','업체','공급처']);
+      const FX_RATES = { USD: 1500, RMB: 210, CNY: 210 };
+
+      function getPoCurrency(o) {
+        const raw = poCurrencyKey ? String(o[poCurrencyKey] || '').trim().toUpperCase() : 'USD';
+        if (raw.includes('RMB') || raw.includes('CNY') || raw.includes('위안') || raw.includes('元') || raw.includes('¥')) return 'RMB';
+        return 'USD';
+      }
+
+      function poFxRate(o) {
+        const currency = getPoCurrency(o);
+        return FX_RATES[currency] || FX_RATES.USD;
+      }
+
+      function poAmountToKrw(o, key) {
+        return Math.round(toNum(o[key]) * poFxRate(o));
+      }
+
+      function formatForeignByCurrency(amount, currency) {
+        if (currency === 'RMB') return `¥${fmt(Math.round(Number(amount || 0)))}`;
+        return `$${fmt(Math.round(Number(amount || 0)))}`;
+      }
 
       function getPoRemainQty(o) {
         const byHeader = poRemainQtyKey ? toNum(o[poRemainQtyKey]) : 0;
@@ -1729,11 +1843,11 @@
       const totalAdvance = poObjects.reduce((s,o)=>s+toNum(o[poAdvanceKey]),0);
       const totalInboundPaid = poObjects.reduce((s,o)=>s+toNum(o[poInboundPaidKey]),0);
       const totalNotInbound = poObjects.reduce((s,o)=>s+toNum(o[poNotInboundKey]),0);
-      const EXCHANGE_RATE = 1500;
-      const totalPoAmountKrw = usdToKrw(totalPoAmount);
-      const totalNotInboundKrw = usdToKrw(totalNotInbound);
-      const totalAdvanceKrw = usdToKrw(totalAdvance);
-      const totalInboundPaidKrw = usdToKrw(totalInboundPaid);
+      const totalPoAmountKrw = poObjects.reduce((s,o)=>s+poAmountToKrw(o, poTotalKey),0);
+      const totalNotInboundKrw = poObjects.reduce((s,o)=>s+poAmountToKrw(o, poNotInboundKey),0);
+      const totalAdvanceKrw = poObjects.reduce((s,o)=>s+poAmountToKrw(o, poAdvanceKey),0);
+      const totalInboundPaidKrw = poObjects.reduce((s,o)=>s+poAmountToKrw(o, poInboundPaidKey),0);
+      const totalUnpaidBalanceKrw = poObjects.reduce((s,o)=>s+poAmountToKrw(o, poUnpaidBalanceKey),0);
 
       const vendorMap = {};
       const vendorFlowMap = {};
@@ -1747,9 +1861,14 @@
           qty: 0,
           usd: 0,
           po: 0,
+          poKrw: 0,
           advance: 0,
+          advanceKrw: 0,
           inbound: 0,
+          inboundKrw: 0,
           remaining: 0,
+          remainingKrw: 0,
+          currency: '',
             remainQty: 0,
           paymentRate: 0
         };
@@ -1792,10 +1911,15 @@
             value: 0
           };
 
+          poMap[poNo].currency = poMap[poNo].currency || getPoCurrency(o);
           poMap[poNo].po += toNum(o[poTotalKey]);
+          poMap[poNo].poKrw += poAmountToKrw(o, poTotalKey);
           poMap[poNo].advance += toNum(o[poAdvanceKey]);
+          poMap[poNo].advanceKrw += poAmountToKrw(o, poAdvanceKey);
           poMap[poNo].inbound += toNum(o[poInboundPaidKey]);
+          poMap[poNo].inboundKrw += poAmountToKrw(o, poInboundPaidKey);
           poMap[poNo].remaining += toNum(o[poNotInboundKey]);
+          poMap[poNo].remainingKrw += poAmountToKrw(o, poNotInboundKey);
           poMap[poNo].remainQty += getPoRemainQty(o);
         }
 
@@ -1811,13 +1935,17 @@
             value: 0
           };
 
+          productMap[productName].currency = productMap[productName].currency || getPoCurrency(o);
           productMap[productName].po += toNum(o[poTotalKey]);
+          productMap[productName].poKrw += poAmountToKrw(o, poTotalKey);
           productMap[productName].advance += toNum(o[poAdvanceKey]);
+          productMap[productName].advanceKrw += poAmountToKrw(o, poAdvanceKey);
           productMap[productName].inbound += toNum(o[poInboundPaidKey]);
+          productMap[productName].inboundKrw += poAmountToKrw(o, poInboundPaidKey);
           productMap[productName].remaining += toNum(o[poNotInboundKey]);
+          productMap[productName].remainingKrw += poAmountToKrw(o, poNotInboundKey);
           productMap[productName].remainQty += getPoRemainQty(o);
         }
-        const poVendorKey = findHeader(poHeaders, ['거래처','업체','공급처']);
         const name = poVendorKey ? (o[poVendorKey] || '거래처 미지정') : '거래처 미지정';
         if (!vendorMap[name]) vendorMap[name] = {
           name,
@@ -1825,22 +1953,32 @@
           qty: 0,
           usd: 0,
           po: 0,
+          poKrw: 0,
           advance: 0,
+          advanceKrw: 0,
           inbound: 0,
+          inboundKrw: 0,
           remaining: 0,
+          remainingKrw: 0,
+          currency: '',
             remainQty: 0,
           paymentRate: 0
         };
 
+        vendorMap[name].currency = vendorMap[name].currency || getPoCurrency(o);
         vendorMap[name].po += toNum(o[poTotalKey]);
+        vendorMap[name].poKrw += poAmountToKrw(o, poTotalKey);
         vendorMap[name].advance += toNum(o[poAdvanceKey]);
+        vendorMap[name].advanceKrw += poAmountToKrw(o, poAdvanceKey);
         vendorMap[name].inbound += toNum(o[poInboundPaidKey]);
+        vendorMap[name].inboundKrw += poAmountToKrw(o, poInboundPaidKey);
         vendorMap[name].remaining += toNum(o[poNotInboundKey]);
+        vendorMap[name].remainingKrw += poAmountToKrw(o, poNotInboundKey);
       });
 
       Object.values(vendorMap).forEach(v => {
-        v.paymentRate = v.po ? (v.advance / v.po) * 100 : 0;
-        v.value = usdToKrw(v.po);
+        v.paymentRate = v.poKrw ? (v.advanceKrw / v.poKrw) * 100 : 0;
+        v.value = v.poKrw || 0;
       });
 
       const paymentMonthValues = [...new Set(Object.keys(vendorFlowMap).map(k => k.slice(0,7)))].sort();
@@ -1856,18 +1994,18 @@
       });
 
       Object.values(poMap).forEach(v => {
-        v.paymentRate = v.po ? (v.advance / v.po) * 100 : 0;
-        v.value = usdToKrw(v.po);
+        v.paymentRate = v.poKrw ? (v.advanceKrw / v.poKrw) * 100 : 0;
+        v.value = v.poKrw || 0;
       });
 
       Object.values(productMap).forEach(v => {
-        v.paymentRate = v.po ? (v.advance / v.po) * 100 : 0;
-        v.value = usdToKrw(v.po);
+        v.paymentRate = v.poKrw ? (v.advanceKrw / v.poKrw) * 100 : 0;
+        v.value = v.poKrw || 0;
       });
 
       Object.values(vendorMap).forEach(v => {
-        v.paymentRate = v.po ? (v.advance / v.po) * 100 : 0;
-        v.value = usdToKrw(v.po);
+        v.paymentRate = v.poKrw ? (v.advanceKrw / v.poKrw) * 100 : 0;
+        v.value = v.poKrw || 0;
       });
 
       const typeMap = {};
@@ -1895,20 +2033,30 @@
         const advanceAmount = toNum(o[poAdvanceKey]);
         const inboundAmount = toNum(o[poInboundPaidKey]);
         const notInboundAmount = toNum(o[poNotInboundKey]);
+        const poAmountKrw = poAmountToKrw(o, poTotalKey);
+        const advanceAmountKrw = poAmountToKrw(o, poAdvanceKey);
+        const inboundAmountKrw = poAmountToKrw(o, poInboundPaidKey);
+        const notInboundAmountKrw = poAmountToKrw(o, poNotInboundKey);
         const remainQty = getPoRemainQty(o);
-        const paymentRate = poAmount ? (advanceAmount / poAmount) * 100 : 0;
+        const paymentRate = poAmountKrw ? (advanceAmountKrw / poAmountKrw) * 100 : 0;
+        const currency = getPoCurrency(o);
 
         return {
           name: poNo || `PO-${idx + 1}`,
           poName: poNo || `PO-${idx + 1}`,
           productName: productName || poNo || `PO-${idx + 1}`,
           po: poAmount,
+          poKrw: poAmountKrw,
           advance: advanceAmount,
+          advanceKrw: advanceAmountKrw,
           inbound: inboundAmount,
+          inboundKrw: inboundAmountKrw,
           remaining: notInboundAmount,
+          remainingKrw: notInboundAmountKrw,
           remainQty,
           paymentRate,
-          value: usdToKrw(poAmount)
+          currency,
+          value: poAmountKrw
         };
       }).filter(r => r.po > 0 && r.paymentRate < 100);
 
@@ -1928,7 +2076,12 @@
         poAdvanceKey,
         poInboundPaidKey,
         poNotInboundKey,
+        poNumberKey,
+        poProductKey,
+        poUnpaidBalanceKey,
         poRemainQtyKey,
+        poVendorKey,
+        poCurrencyKey,
         totalUsd,
         totalKrw,
         scheduledPaymentsInPeriod,
@@ -1948,6 +2101,7 @@
         totalAdvanceKrw,
         totalInboundPaidKrw,
         totalNotInboundKrw,
+        totalUnpaidBalanceKrw,
         vendorRank: Object.values(vendorMap)
           .filter(v => v.name && v.name !== '거래처 미지정' && v.paymentRate < 100)
           .sort((a,b)=>b.value-a.value),
@@ -1971,6 +2125,8 @@
     function renderPayment() {
       const a = getPaymentAnalysis();
 
+      const poDetailModal = renderPaymentPoDetailModal(a);
+
       const previewRows = a.objects.slice(0, 40).map(o => `
         <tr>
           <td>${o[a.dateKey] || '-'}</td>
@@ -1992,10 +2148,12 @@
       grid(`
         ${metricCard('외화 결제액','USD 기준 합계',fmt(a.totalUsd),a.usdKey || '외화 컬럼 없음','good',a.dailyFlow.map(r=>r.value))}
         ${metricCard('원화 결제액','KRW 기준 합계',money(a.totalKrw),a.krwKey || '원화 컬럼 없음','good',a.dailyFlow.map(r=>r.value))}
-        ${metricCard('총 PO금액','환율 1,500원 적용',money(a.totalPoAmountKrw),`${usd(a.totalPoAmount)} × 1,500원`, 'good',[a.totalPoAmountKrw])}
-        ${metricCard('미입고 물품금액','환율 1,500원 적용',money(a.totalNotInboundKrw),`${usd(a.totalNotInbound)} × 1,500원`,a.totalNotInbound > 0 ? 'warn' : 'good',[a.totalNotInboundKrw])}
+        ${clickableMetricCard('총 PO금액','통화별 환율 적용',money(a.totalPoAmountKrw),`통화열 기준 USD 1,500원 / RMB 210원 / 클릭 시 구성 상세`, 'good',[a.totalPoAmountKrw],`openPaymentPoDetail('po')`)}
+        ${clickableMetricCard('미입고 물품금액','통화별 환율 적용',money(a.totalNotInboundKrw),`입고되지 않은 물품금액 기준 / 클릭 시 구성 상세`,a.totalNotInboundKrw > 0 ? 'warn' : 'good',[a.totalNotInboundKrw],`openPaymentPoDetail('notInbound')`)}
+        ${clickableMetricCard('물품 미결제 잔액','물품미결제잔액(외화) 열 기준',money(a.totalUnpaidBalanceKrw),`통화열 기준 USD 1,500원 / RMB 210원 / 클릭 시 구성 상세`,a.totalUnpaidBalanceKrw > 0 ? 'warn' : 'good',[a.totalUnpaidBalanceKrw],`openPaymentPoDetail('unpaid')`)}
         
 
+        ${poDetailModal}
         <article class="card wide"><div class="card-head"><div><div class="card-title">업체별 결제 흐름 분석</div><div class="card-sub">거래처별 월별 / 일별 지출 흐름</div></div><span class="badge">운영 분석용</span></div>
           <div class="table-tools">
             <div class="tool-left">
@@ -2103,7 +2261,7 @@
 
         <article class="card side"><div class="card-head"><div><div class="card-title">결제 유형 분석</div><div class="card-sub">선급금 / 잔금 기준</div></div></div>${renderProductRankChart(a.typeRank, 6)}</article>
 
-        <article class="card half"><div class="card-head"><div><div class="card-title">거래처별 PO금액</div><div class="card-sub">총 PO금액 기준 (환율 1,500원 적용)</div></div></div>${renderProductRankChart(a.vendorRank, 8)}</article>
+        <article class="card half"><div class="card-head"><div><div class="card-title">거래처별 PO금액</div><div class="card-sub">총 PO금액 기준 / 통화열 기준 환율 적용</div></div></div>${renderProductRankChart(a.vendorRank, 8)}</article>
 
         <article class="card half"><div class="card-head"><div><div class="card-title">PO별 물품대금 지급 진행중</div><div class="card-sub">총선급금 ÷ 총 PO금액 기준 지급율</div></div><span class="badge warn">진행중</span></div>
           <div class="rank-chart">${a.poPaymentRank.map((r,i)=>`
@@ -2111,7 +2269,7 @@
               <div class="rank-name"><div style="font-weight:700; font-size:13px; color:#eef3ff; line-height:1.3;">${r.productName || r.name}</div><div style="font-size:11px; color:var(--muted); margin-top:3px;">${r.poName || r.name}</div></div>
               <div class="rank-track"><div class="rank-fill" style="width:${Math.max(r.paymentRate,2)}%"></div></div>
               <div class="rank-value">${r.paymentRate.toFixed(1)}%<br><span style="font-size:11px; color:var(--muted); font-weight:500;">총 ${money(r.value)}</span></div>
-              <div class="rank-qty">잔여 ${fmt(r.remainQty || 0)}개<br><span style="font-size:11px; color:#dce5ff; font-weight:600;">미입고 ${money(usdToKrw(r.remaining || 0))}</span></div>
+              <div class="rank-qty">잔여 ${fmt(r.remainQty || 0)}개<br><span style="font-size:11px; color:#dce5ff; font-weight:600;">미입고 ${money(r.remainingKrw || 0)}</span></div>
             </div>
           `).join('') || '<div class="empty">진행중인 PO가 없습니다.</div>'}</div>
         </article>
@@ -2122,7 +2280,7 @@
               <div class="rank-name"><div style="font-weight:700; font-size:13px; color:#eef3ff; line-height:1.3;">${r.productName || r.name}</div><div style="font-size:11px; color:var(--muted); margin-top:3px;">${r.poName || r.name}</div></div>
               <div class="rank-track"><div class="rank-fill" style="width:${Math.max(r.paymentRate,2)}%"></div></div>
               <div class="rank-value">${r.paymentRate.toFixed(1)}%</div>
-              <div class="rank-qty">${money(usdToKrw(r.inbound))}</div>
+              <div class="rank-qty">${money(r.inboundKrw || 0)}</div>
             </div>
           `).join('')}</div>
         </article>
@@ -2133,8 +2291,9 @@
           <div class="issue"><div class="issue-icon">💵</div><div><strong>외화</strong><span>${a.usdKey || '없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">₩</div><div><strong>원화</strong><span>${a.krwKey || '없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">📦</div><div><strong>PO 기준</strong><span>${a.poTotalKey || '총PO금액 없음'} / ${a.poNotInboundKey || '미입고금액 없음'}</span></div><div></div></div>
+          <div class="issue"><div class="issue-icon">💳</div><div><strong>미결제 잔액</strong><span>${a.poUnpaidBalanceKey || '물품미결제잔액(외화) 없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">#</div><div><strong>잔여수량</strong><span>${a.poRemainQtyKey || 'Q열'} / Q열 직접 참조</span></div><div></div></div>
-          <div class="issue"><div class="issue-icon">💱</div><div><strong>적용 환율</strong><span>PO 외화 × 1,500원 고정</span></div><div></div></div>
+          <div class="issue"><div class="issue-icon">💱</div><div><strong>적용 환율</strong><span>${a.poCurrencyKey || '통화'} 열 기준 / USD 1,500원 · RMB 210원</span></div><div></div></div>
         </div></article>
 
         <article class="card full"><div class="card-head"><div><div class="card-title">결제 상세 데이터</div><div class="card-sub">실제 결제 운영 기준</div></div></div>
