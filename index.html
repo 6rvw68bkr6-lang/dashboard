@@ -60,6 +60,8 @@
     .card { background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025)); border: 1px solid var(--panel-line); border-radius: var(--radius); padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.22); position: relative; overflow: hidden; }
     .card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 85% 0%, rgba(255,255,255,.08), transparent 28%); pointer-events: none; }
     .kpi { grid-column: span 3; min-height: 146px; }
+    .kpi.double { grid-column: span 6; }
+    .kpi.third-kpi { grid-column: span 4; }
     .wide { grid-column: span 8; min-height: 370px; }
     .side { grid-column: span 4; min-height: 370px; }
     .half { grid-column: span 6; min-height: 300px; }
@@ -333,7 +335,7 @@
       reorder: { name: '발주_필요', gid: '164754989' }
     };
 
-    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, coupang: { page: 1, pageSize: 30, basis: 'supply', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '', overviewDetail: '' } };
+    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, coupang: { page: 1, pageSize: 30, basis: 'supply', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '', overviewDetail: '', poDetail: '', vendorFlowOpen: false } };
 
     const titles = {
       overview: ['주간 운영 대시보드', '전체 운영 상황을 대표 보고용으로 요약합니다.'],
@@ -607,6 +609,15 @@
       return html.replace('<article class="card kpi"', `<article class="card kpi" onclick="${onClick}" style="cursor:pointer;" title="클릭해서 상세 보기"`);
     }
 
+    function sizedMetricCard(html, sizeClass) {
+      return html.replace('class="card kpi"', `class="card kpi ${sizeClass}"`);
+    }
+
+    function togglePaymentVendorFlow() {
+      state.payment.vendorFlowOpen = !state.payment.vendorFlowOpen;
+      renderPayment();
+    }
+
     function openOverviewPaymentDetail(type) {
       state.payment.overviewDetail = type;
       renderOverview();
@@ -652,7 +663,7 @@
                     <td>${o[a.vendorKey] || '-'}</td>
                     <td>${o[a.typeKey] || '-'}</td>
                     <td>${o[a.inboundKey] || '-'}</td>
-                    <td class="right">${fmt(toNum(o[a.usdKey]))}</td>
+                    <td class="right">${paymentCurrency(o, a.paymentCurrencyKey) === 'RMB' ? '¥' : '$'}${fmt(toNum(o[a.usdKey]))}</td>
                     <td class="right">${money(toNum(o[a.krwKey]))}</td>
                   </tr>
                 `).join('') || '<tr><td colspan="7" class="muted">표시할 결제 데이터가 없습니다.</td></tr>'}</tbody>
@@ -1052,6 +1063,16 @@
         return keywords.some(k => text.includes(String(k).replaceAll(' ', '').toLowerCase())) &&
                !exclude.some(k => text.includes(String(k).replaceAll(' ', '').toLowerCase()));
       });
+    }
+
+    function normalizeCurrency(raw) {
+      const text = String(raw || '').trim().toUpperCase();
+      if (text.includes('RMB') || text.includes('CNY') || text.includes('위안') || text.includes('元') || text.includes('¥')) return 'RMB';
+      return 'USD';
+    }
+
+    function paymentCurrency(o, currencyKey) {
+      return normalizeCurrency(currencyKey ? o[currencyKey] : 'USD');
     }
 
     function getCoupangAnalysis(scope = 'ytd') {
@@ -1748,8 +1769,13 @@
       const typeKey = findHeader(paymentHeaders, ['결제유형','유형','선급금','잔금','구분']);
       const inboundKey = findHeader(paymentHeaders, ['입고일','입고예정일','도착일']);
 
-      const usdKey = findHeader(paymentHeaders, ['USD','외화','달러','송금USD']);
+      const usdKey = findHeader(paymentHeaders, ['USD','외화','달러','송금USD','결제외화','외화금액','외화결제액','결제액']) || paymentHeaders[7];
       const krwKey = findHeader(paymentHeaders, ['원화','KRW','결제원화','한화']);
+      // 결제_예정 및 완료 탭 G열: 통화 구분 고정 사용
+      const paymentCurrencyKey = paymentHeaders[6] || findHeader(paymentHeaders, ['통화','currency','curr','화폐']);
+      function getPaymentCurrency(o) {
+        return paymentCurrency(o, paymentCurrencyKey);
+      }
       const poHeaders = poRows[0] || [];
       const poNumberKey = findHeader(poHeaders, ['PO번호','PO','발주번호','ORDER']);
       const poProductKey = findHeader(poHeaders, ['상품명','품목명','제품명','품목','제품']);
@@ -1801,7 +1827,8 @@
         return d >= today;
       }).sort((a,b) => toDate(a[dateKey]) - toDate(b[dateKey]));
 
-      const upcomingUsd = upcomingPayments.reduce((s,o)=>s+toNum(o[usdKey]),0);
+      const upcomingUsd = upcomingPayments.filter(o => getPaymentCurrency(o) === 'USD').reduce((s,o)=>s+toNum(o[usdKey]),0);
+      const upcomingRmb = upcomingPayments.filter(o => getPaymentCurrency(o) === 'RMB').reduce((s,o)=>s+toNum(o[usdKey]),0);
       const upcomingKrw = upcomingPayments.reduce((s,o)=>s+toNum(o[krwKey]),0);
       const nearestPaymentDate = upcomingPayments.length ? dateStr(toDate(upcomingPayments[0][dateKey])) : '-';
 
@@ -1837,7 +1864,8 @@
       const scheduledKrwInPeriod = scheduledPaymentsInPeriod.reduce((s,o)=>s+toNum(o[krwKey]),0);
       const paidKrwInPeriod = paidPaymentsInPeriod.reduce((s,o)=>s+toNum(o[krwKey]),0);
 
-      const totalUsd = objects.reduce((s,o)=>s+toNum(o[usdKey]),0);
+      const totalUsd = objects.filter(o => getPaymentCurrency(o) === 'USD').reduce((s,o)=>s+toNum(o[usdKey]),0);
+      const totalRmb = objects.filter(o => getPaymentCurrency(o) === 'RMB').reduce((s,o)=>s+toNum(o[usdKey]),0);
       const totalKrw = objects.reduce((s,o)=>s+toNum(o[krwKey]),0);
       const totalPoAmount = poObjects.reduce((s,o)=>s+toNum(o[poTotalKey]),0);
       const totalAdvance = poObjects.reduce((s,o)=>s+toNum(o[poAdvanceKey]),0);
@@ -1873,7 +1901,8 @@
           paymentRate: 0
         };
         vendorMap[name].value += toNum(o[krwKey]);
-        vendorMap[name].usd += toNum(o[usdKey]);
+        vendorMap[name].usd += getPaymentCurrency(o) === 'USD' ? toNum(o[usdKey]) : 0;
+        vendorMap[name].rmb = (vendorMap[name].rmb || 0) + (getPaymentCurrency(o) === 'RMB' ? toNum(o[usdKey]) : 0);
         vendorMap[name].qty += 1;
       });
 
@@ -2083,13 +2112,16 @@
         poVendorKey,
         poCurrencyKey,
         totalUsd,
+        totalRmb,
         totalKrw,
+        paymentCurrencyKey,
         scheduledPaymentsInPeriod,
         paidPaymentsInPeriod,
         scheduledKrwInPeriod,
         paidKrwInPeriod,
         upcomingPayments,
         upcomingUsd,
+        upcomingRmb,
         upcomingKrw,
         nearestPaymentDate,
         upcomingDaily,
@@ -2134,7 +2166,7 @@
           <td>${o[a.vendorKey] || '-'}</td>
           <td>${o[a.typeKey] || '-'}</td>
           <td>${o[a.inboundKey] || '-'}</td>
-          <td class="right">${fmt(toNum(o[a.usdKey]))}</td>
+          <td class="right">${paymentCurrency(o, a.paymentCurrencyKey) === 'RMB' ? '¥' : '$'}${fmt(toNum(o[a.usdKey]))}</td>
           <td class="right">${money(toNum(o[a.krwKey]))}</td>
           <td class="right">${(() => {
             const vendor = o[a.vendorKey] || '거래처 미지정';
@@ -2146,15 +2178,16 @@
       `).join('');
 
       grid(`
-        ${metricCard('외화 결제액','USD 기준 합계',fmt(a.totalUsd),a.usdKey || '외화 컬럼 없음','good',a.dailyFlow.map(r=>r.value))}
-        ${metricCard('원화 결제액','KRW 기준 합계',money(a.totalKrw),a.krwKey || '원화 컬럼 없음','good',a.dailyFlow.map(r=>r.value))}
-        ${clickableMetricCard('총 PO금액','통화별 환율 적용',money(a.totalPoAmountKrw),`통화열 기준 USD 1,500원 / RMB 210원 / 클릭 시 구성 상세`, 'good',[a.totalPoAmountKrw],`openPaymentPoDetail('po')`)}
-        ${clickableMetricCard('미입고 물품금액','통화별 환율 적용',money(a.totalNotInboundKrw),`입고되지 않은 물품금액 기준 / 클릭 시 구성 상세`,a.totalNotInboundKrw > 0 ? 'warn' : 'good',[a.totalNotInboundKrw],`openPaymentPoDetail('notInbound')`)}
-        ${clickableMetricCard('물품 미결제 잔액','물품미결제잔액(외화) 열 기준',money(a.totalUnpaidBalanceKrw),`통화열 기준 USD 1,500원 / RMB 210원 / 클릭 시 구성 상세`,a.totalUnpaidBalanceKrw > 0 ? 'warn' : 'good',[a.totalUnpaidBalanceKrw],`openPaymentPoDetail('unpaid')`)}
+        ${sizedMetricCard(metricCard('외화 결제액','USD / RMB 기준 합계',`${fmt(a.totalUsd)} / ¥${fmt(a.totalRmb || 0)}`,`${a.usdKey || '외화금액 없음'} · 통화: ${a.paymentCurrencyKey || 'G열 없음'}`,'good',a.dailyFlow.map(r=>r.value)), 'double')}
+        ${sizedMetricCard(metricCard('원화 결제액','KRW 기준 합계',money(a.totalKrw),a.krwKey || '원화 컬럼 없음','good',a.dailyFlow.map(r=>r.value)), 'double')}
+        ${sizedMetricCard(clickableMetricCard('총 PO금액','통화별 환율 적용',money(a.totalPoAmountKrw),`통화열 기준 USD 1,500원 / RMB 210원 / 클릭 시 구성 상세`, 'good',[a.totalPoAmountKrw],`openPaymentPoDetail('po')`), 'third-kpi')}
+        ${sizedMetricCard(clickableMetricCard('미입고 물품금액','통화별 환율 적용',money(a.totalNotInboundKrw),`입고되지 않은 물품금액 기준 / 클릭 시 구성 상세`,a.totalNotInboundKrw > 0 ? 'warn' : 'good',[a.totalNotInboundKrw],`openPaymentPoDetail('notInbound')`), 'third-kpi')}
+        ${sizedMetricCard(clickableMetricCard('물품 미결제 잔액','물품미결제잔액(외화) 열 기준',money(a.totalUnpaidBalanceKrw),`통화열 기준 USD 1,500원 / RMB 210원 / 클릭 시 구성 상세`,a.totalUnpaidBalanceKrw > 0 ? 'warn' : 'good',[a.totalUnpaidBalanceKrw],`openPaymentPoDetail('unpaid')`), 'third-kpi')}
         
 
         ${poDetailModal}
-        <article class="card wide"><div class="card-head"><div><div class="card-title">업체별 결제 흐름 분석</div><div class="card-sub">거래처별 월별 / 일별 지출 흐름</div></div><span class="badge">운영 분석용</span></div>
+        <article class="card full"><div class="card-head"><div><div class="card-title">업체별 결제 흐름 분석</div><div class="card-sub">거래처별 월별 / 일별 지출 흐름</div></div><button onclick="togglePaymentVendorFlow()">${state.payment.vendorFlowOpen ? '흐름 분석 닫기' : '흐름 분석 보기'}</button></div>
+          ${state.payment.vendorFlowOpen ? `
           <div class="table-tools">
             <div class="tool-left">
               <select onchange="setPaymentVendorPeriod(this.value)">
@@ -2207,6 +2240,7 @@
               </div>
             `;
           })()}
+          ` : '<div class="empty">필요할 때만 열어서 업체별 결제 흐름을 확인합니다.</div>'}
         </article>
 
         <article class="card full"><div class="card-head"><div><div class="card-title">다가오는 결제 예정</div><div class="card-sub">예정 결제 통합 운영 현황</div></div><span class="badge warn">${fmt(a.upcomingPayments.length)}건 예정</span></div>
@@ -2289,6 +2323,7 @@
           <div class="issue"><div class="issue-icon">📅</div><div><strong>결제일</strong><span>${a.dateKey || '없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">🏭</div><div><strong>거래처</strong><span>${a.vendorKey || '없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">💵</div><div><strong>외화</strong><span>${a.usdKey || '없음'}</span></div><div></div></div>
+          <div class="issue"><div class="issue-icon">💱</div><div><strong>결제 통화</strong><span>${a.paymentCurrencyKey || 'G열 없음'} / 결제_예정 및 완료 G열 기준</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">₩</div><div><strong>원화</strong><span>${a.krwKey || '없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">📦</div><div><strong>PO 기준</strong><span>${a.poTotalKey || '총PO금액 없음'} / ${a.poNotInboundKey || '미입고금액 없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">💳</div><div><strong>미결제 잔액</strong><span>${a.poUnpaidBalanceKey || '물품미결제잔액(외화) 없음'}</span></div><div></div></div>
