@@ -333,7 +333,7 @@
       reorder: { name: '발주_필요', gid: '164754989' }
     };
 
-    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, coupang: { page: 1, pageSize: 30, basis: 'supply', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '' } };
+    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, coupang: { page: 1, pageSize: 30, basis: 'supply', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '', overviewDetail: '' } };
 
     const titles = {
       overview: ['주간 운영 대시보드', '전체 운영 상황을 대표 보고용으로 요약합니다.'],
@@ -601,6 +601,68 @@
       return `<article class="card kpi"><div class="card-head"><div><div class="card-title">${title}</div><div class="card-sub">${sub}</div></div><span class="badge ${cls}">${tone === 'danger' ? '즉시 확인' : tone === 'warn' ? '관리 필요' : '운영 KPI'}</span></div><div class="kpi-value">${value}</div><div class="kpi-caption">${caption}</div><div class="spark">${bars}</div></article>`;
     }
 
+    function clickableMetricCard(title, sub, value, caption, tone = 'good', spark = [], onClick = '') {
+      const html = metricCard(title, sub, value, caption, tone, spark);
+      if (!onClick) return html;
+      return html.replace('<article class="card kpi"', `<article class="card kpi" onclick="${onClick}" style="cursor:pointer;" title="클릭해서 상세 보기"`);
+    }
+
+    function openOverviewPaymentDetail(type) {
+      state.payment.overviewDetail = type;
+      renderOverview();
+    }
+
+    function closeOverviewPaymentDetail() {
+      state.payment.overviewDetail = '';
+      renderOverview();
+    }
+
+    function renderOverviewPaymentModal(a) {
+      const type = state.payment.overviewDetail;
+      if (!type) return '';
+      const isScheduled = type === 'scheduled';
+      const rows = isScheduled ? a.scheduledPaymentsInPeriod : a.paidPaymentsInPeriod;
+      const title = isScheduled ? '결제 예정 금액 상세' : '실제 결제 금액 상세';
+      const sub = isScheduled ? '선택 기간 내 예정일 기준 / 오늘 이후 예정 건' : '선택 기간 내 결제 완료 기준 / 오늘 이전 완료 건';
+      const total = rows.reduce((s,o)=>s+toNum(o[a.krwKey]),0);
+      const sortedRows = [...rows].sort((x,y)=>(toDate(x[a.dateKey])?.getTime() || 0) - (toDate(y[a.dateKey])?.getTime() || 0));
+
+      return `
+        <div class="modal-backdrop" onclick="closeOverviewPaymentDetail()">
+          <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-head">
+              <div>
+                <div class="card-title">${title}</div>
+                <div class="card-sub">${sub}</div>
+              </div>
+              <button class="modal-close" onclick="closeOverviewPaymentDetail()">닫기</button>
+            </div>
+            <div class="flow-summary" style="margin-bottom:18px;">
+              <div class="pill">총 금액 ${money(total)}</div>
+              <div class="pill">건수 ${fmt(sortedRows.length)}건</div>
+              <div class="pill">${document.getElementById('periodLabel').textContent}</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>결제일</th><th>품목</th><th>거래처</th><th>결제유형</th><th>입고일</th><th class="right">외화</th><th class="right">원화</th></tr></thead>
+                <tbody>${sortedRows.map(o=>`
+                  <tr>
+                    <td>${o[a.dateKey] || '-'}</td>
+                    <td>${o[a.productKey] || '-'}</td>
+                    <td>${o[a.vendorKey] || '-'}</td>
+                    <td>${o[a.typeKey] || '-'}</td>
+                    <td>${o[a.inboundKey] || '-'}</td>
+                    <td class="right">${fmt(toNum(o[a.usdKey]))}</td>
+                    <td class="right">${money(toNum(o[a.krwKey]))}</td>
+                  </tr>
+                `).join('') || '<tr><td colspan="7" class="muted">표시할 결제 데이터가 없습니다.</td></tr>'}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderBarChart(data, valueKey, labelKey = 'date', options = {}) {
       const baseItems = options.hideZero ? data.filter(r => Number(r[valueKey] || 0) > 0) : data;
       const items = options.limit ? baseItems.slice(-options.limit) : baseItems;
@@ -689,6 +751,7 @@
         : '0.00%';
 
       const paymentAnalysis = getPaymentAnalysis();
+      const overviewPaymentModal = renderOverviewPaymentModal(paymentAnalysis);
       const coupangRows = state.raw.coupang || [];
       const coupangAnalysis = getCoupangAnalysis('period');
       const coupangTotal = coupangAnalysis.totalQty;
@@ -701,8 +764,8 @@
         ${metricCard('누락 건수','선택 기간 합계',fmt(missing),`출고 대비 ${pct(missing,totalShip)}`,missing > 0 ? 'warn' : 'good',d.slice(-7).map(r=>r.missing))}
         ${metricCard('오배송 건수','선택 기간 합계',fmt(mis),`출고 대비 ${pct(mis,totalShip)}`,mis > 0 ? 'danger' : 'good',d.slice(-7).map(r=>r.misdelivery))}
         ${metricCard('문제율','누락+오배송 / 출고',`${fmt(issues)}건`,`${pct(issues,totalShip)} / 총 출고 ${fmt(totalShip)}건`,issues > 0 ? 'warn' : 'good',d.slice(-7).map(r=>r.missing+r.misdelivery))}
-        ${metricCard('결제 예정 금액','선택 기간 내 예정일 기준',money(paymentAnalysis.scheduledKrwInPeriod),`${fmt(paymentAnalysis.scheduledPaymentsInPeriod.length)}건 예정`,'warn',[paymentAnalysis.scheduledKrwInPeriod])}
-        ${metricCard('실제 결제 금액','선택 기간 내 결제 완료 기준',money(paymentAnalysis.paidKrwInPeriod),`${fmt(paymentAnalysis.paidPaymentsInPeriod.length)}건 결제`,'good',[paymentAnalysis.paidKrwInPeriod])}
+        ${clickableMetricCard('결제 예정 금액','선택 기간 내 예정일 기준',money(paymentAnalysis.scheduledKrwInPeriod),`${fmt(paymentAnalysis.scheduledPaymentsInPeriod.length)}건 예정 / 클릭 시 상세`,'warn',[paymentAnalysis.scheduledKrwInPeriod],`openOverviewPaymentDetail('scheduled')`)}
+        ${clickableMetricCard('실제 결제 금액','선택 기간 내 결제 완료 기준',money(paymentAnalysis.paidKrwInPeriod),`${fmt(paymentAnalysis.paidPaymentsInPeriod.length)}건 결제 / 클릭 시 상세`,'good',[paymentAnalysis.paidKrwInPeriod],`openOverviewPaymentDetail('paid')`)}
         ${metricCard('총 제작수량','제작_일별 기준',fmt(productionTotal),productionQtyKey ? `${productionQtyKey} 합계` : '행 개수 기준','good',[productionTotal])}
         ${metricCard('불량 / 폐기','제작 품질 이슈',fmt(productionDefect),`불량률 ${productionRate}` ,productionDefect > 0 ? 'warn' : 'good',[productionDefect])}
         ${metricCard('쿠팡 판매','수량 + 공급가액 합계',`${fmt(coupangTotal)}개`,`공급가액 ${money(coupangSupplyTotal)}`,'good',coupangAnalysis.dated.slice(-7).map(r=>r.qty))}
@@ -727,6 +790,7 @@
           <div class="issue"><div class="issue-icon">📊</div><div><strong>데이터 상태</strong><span>쿠팡_판매 시트 연결</span></div><div class="issue-num">${coupangRows.length ? 'OK' : '확인'}</div></div>
         </div></article>
         <article class="card half"><div class="card-head"><div><div class="card-title">운영 섹션 연결 상태</div><div class="card-sub">구글시트 탭 기준 데이터 연결</div></div></div><div class="progress-block">${renderProgressHtml()}</div></article>
+        ${overviewPaymentModal}
         <article class="card half"><div class="card-head"><div><div class="card-title">대표 보고용 핵심 문장</div><div class="card-sub">현재 데이터 기준 자동 생성</div></div></div><div class="issue-list">
           <div class="issue"><div class="issue-icon">1</div><div><strong>선택 기간 출고는 총 ${fmt(totalShip)}건입니다.</strong><span>출고일 기준 평균은 ${fmt(avgBiz)}건입니다.</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">2</div><div><strong>문제 건수는 총 ${fmt(issues)}건입니다.</strong><span>누락 ${fmt(missing)}건, 오배송 ${fmt(mis)}건, 문제율 ${pct(issues,totalShip)}입니다.</span></div><div></div></div>
