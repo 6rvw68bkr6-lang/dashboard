@@ -2121,8 +2121,8 @@
       const commonCards = `
         ${viewToggle('production')}
         ${metricCard('올해 누적 제작수량','제작_일별 YTD 기준',fmt(a.totalQty),`${latestProdDate.getFullYear()}년 전체 / 이번달 ${fmt(monthQty)}개`,'good',a.daily.map(r=>r.qty))}
+        ${metricCard('올해 누적 불량 / 폐기','YTD 품질 이슈',fmt(a.totalDefect),`올해 불량률 ${a.defectRate} / 목표 5% 미만`,a.totalDefect > 0 ? 'warn' : 'good',a.daily.map(r=>r.defect))}
         ${metricCard('이번달 제작수량','전월 대비',fmt(monthQty),`전월 ${fmt(prevMonthQty)}개 / ${changeRate(monthQty, prevMonthQty)}`,changeTone(monthQty, prevMonthQty),thisMonthProd.map(r=>r.qty))}
-        ${metricCard('불량 / 폐기','올해 누적 품질 이슈',fmt(a.totalDefect),`올해 불량률 ${a.defectRate} / 목표 5% 미만`,a.totalDefect > 0 ? 'warn' : 'good',a.daily.map(r=>r.defect))}
         ${metricCard('이번달 불량률','전월 대비',pct(monthDefect, monthQty),`전월 ${pct(prevMonthDefect, prevMonthQty)} / ${changeRate(monthDefectRate, prevMonthDefectRate)}`,changeTone(monthDefectRate, prevMonthDefectRate, true),thisMonthProd.map(r=>r.defect))}
         ${metricCard('선택기간 제작수량','상단 기간 선택 기준',fmt(periodA.totalQty),`${document.getElementById('periodLabel').textContent} / 불량률 ${periodDefectRate}`,periodA.totalDefect > 0 ? 'warn' : 'good',periodA.daily.map(r=>r.qty))}
       `;
