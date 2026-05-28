@@ -122,8 +122,18 @@
     .pagination { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 14px; position: relative; z-index: 1; }
     .page-info { color: var(--muted); font-size: 13px; padding: 0 6px; }
     .rank-chart { display: grid; gap: 12px; position: relative; z-index: 1; }
-    .rank-row { display: grid; grid-template-columns: minmax(160px, 1fr) 3fr 120px 80px; gap: 12px; align-items: center; }
-    .rank-name { font-size: 13px; color: #e8eeff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-row { display: grid; grid-template-columns: minmax(240px, 1.4fr) 2.4fr 120px 80px; gap: 12px; align-items: center; }
+    .rank-name {
+      font-size: 13px;
+      color: #e8eeff;
+      line-height: 1.35;
+      min-width: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: keep-all;
+    }
     .rank-track { height: 16px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
     .rank-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
     .rank-value { text-align: right; font-size: 13px; color: #dce5ff; font-weight: 700; }
@@ -637,7 +647,7 @@
 
       const paymentAnalysis = getPaymentAnalysis();
       const coupangRows = state.raw.coupang || [];
-      const coupangAnalysis = getCoupangAnalysis();
+      const coupangAnalysis = getCoupangAnalysis('period');
       const coupangTotal = coupangAnalysis.totalQty;
       const coupangSupplyTotal = coupangAnalysis.totalSupply;
       const coupangMainKey = coupangAnalysis.qtyKey;
@@ -670,14 +680,14 @@
         <article class="card half"><div class="card-head"><div><div class="card-title">쿠팡 판매 현황</div><div class="card-sub">기간별 판매 / 매출 기준</div></div></div><div class="issue-list">
           <div class="issue"><div class="issue-icon">🛒</div><div><strong>쿠팡 판매수량</strong><span>${coupangMainKey || '자동 감지'} 기준</span></div><div class="issue-num">${fmt(coupangTotal)}개</div></div>
           <div class="issue"><div class="issue-icon">₩</div><div><strong>공급가액 합계</strong><span>쿠팡 판매 탭 계산 기준</span></div><div class="issue-num">${money(coupangSupplyTotal)}</div></div>
-          <div class="issue"><div class="issue-icon">📅</div><div><strong>기간 적용</strong><span>${coupangDateKey || '날짜열 감지 안됨'}</span></div><div class="issue-num">${fmt(coupangObjects.length)}</div></div>
+          <div class="issue"><div class="issue-icon">📅</div><div><strong>기간 적용</strong><span>${document.getElementById('periodLabel').textContent}</span></div><div class="issue-num">${fmt(coupangObjects.length)}</div></div>
           <div class="issue"><div class="issue-icon">📊</div><div><strong>데이터 상태</strong><span>쿠팡_판매 시트 연결</span></div><div class="issue-num">${coupangRows.length ? 'OK' : '확인'}</div></div>
         </div></article>
         <article class="card half"><div class="card-head"><div><div class="card-title">운영 섹션 연결 상태</div><div class="card-sub">구글시트 탭 기준 데이터 연결</div></div></div><div class="progress-block">${renderProgressHtml()}</div></article>
         <article class="card half"><div class="card-head"><div><div class="card-title">대표 보고용 핵심 문장</div><div class="card-sub">현재 데이터 기준 자동 생성</div></div></div><div class="issue-list">
           <div class="issue"><div class="issue-icon">1</div><div><strong>선택 기간 출고는 총 ${fmt(totalShip)}건입니다.</strong><span>출고일 기준 평균은 ${fmt(avgBiz)}건입니다.</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">2</div><div><strong>문제 건수는 총 ${fmt(issues)}건입니다.</strong><span>누락 ${fmt(missing)}건, 오배송 ${fmt(mis)}건, 문제율 ${pct(issues,totalShip)}입니다.</span></div><div></div></div>
-          <div class="issue"><div class="issue-icon">3</div><div><strong>쿠팡 판매수량은 ${fmt(coupangTotal)}개, 공급가액 합계는 ${money(coupangSupplyTotal)}입니다.</strong><span>쿠팡 판매 탭과 동일한 기간 기준으로 계산됩니다.</span></div><div></div></div>
+          <div class="issue"><div class="issue-icon">3</div><div><strong>선택 기간 쿠팡 판매수량은 ${fmt(coupangTotal)}개, 공급가액 합계는 ${money(coupangSupplyTotal)}입니다.</strong><span>종합현황에서는 상단 기간 선택 기준으로 계산됩니다.</span></div><div></div></div>
         </div></article>
       `);
     }
@@ -826,13 +836,14 @@
       });
     }
 
-    function getCoupangAnalysis() {
+    function getCoupangAnalysis(scope = 'ytd') {
       const rows = state.raw.coupang || [];
       const headers = rows[0] || [];
       const allObjects = rowsToObjects(rows);
 
       const dateKey = findHeader(headers, ['날짜','일자','판매일','출고일','주문일','주문일자','매출일','정산일','date']);
       const qtyKey = findHeader(headers, ['판매수량','출고수량','수량','판매개수','개수']);
+      const categoryKey = findHeader(headers, ['카테고리','분류','상품분류','제품군','품목군','카테고리명']);
 
       // 총액 컬럼과 단가 컬럼을 분리한다.
       // 쿠팡 시트에서 '공급가액'이 단가처럼 들어오는 경우가 있어, 공급가액은 단가 후보로 우선 처리한다.
@@ -859,7 +870,22 @@
         });
       }
 
-      const periodObjects = dateKey ? filterObjectsByDate(allObjects, dateKey) : allObjects;
+      const latestCoupangDate = (() => {
+        const dates = dateKey ? allObjects.map(o => toDate(o[dateKey])).filter(Boolean) : [];
+        return dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
+      })();
+
+      // 쿠팡 판매 탭은 택배/제작처럼 운영 KPI 기준으로 관리하므로,
+      // 상단 기간 필터가 아니라 최신 판매일이 속한 연도 전체(YTD)를 기본 기준으로 사용한다.
+      const ytdObjects = dateKey
+        ? allObjects.filter(o => {
+            const d = toDate(o[dateKey]);
+            return d && d.getFullYear() === latestCoupangDate.getFullYear();
+          })
+        : allObjects;
+
+      const filteredObjects = dateKey ? filterObjectsByDate(allObjects, dateKey) : allObjects;
+      const periodObjects = scope === 'period' ? filteredObjects : ytdObjects;
       const periodDates = [...new Set(periodObjects.map(o => dateStr(toDate(o[dateKey]))).filter(d => d !== '-'))].sort();
 
       if (state.coupang.date && !periodDates.includes(state.coupang.date)) {
@@ -901,6 +927,27 @@
       const totalPurchase = objects.reduce((s, o) => s + rowPurchase(o), 0);
       const totalTax = objects.reduce((s, o) => s + rowTax(o), 0);
       const totalBasis = state.coupang.basis === 'purchase' ? totalPurchase : totalSupply;
+
+      const thisMonthObjects = ytdObjects.filter(o => {
+        const d = toDate(o[dateKey]);
+        return d && d.getFullYear() === latestCoupangDate.getFullYear() && d.getMonth() === latestCoupangDate.getMonth();
+      });
+      const prevMonthDate = new Date(latestCoupangDate.getFullYear(), latestCoupangDate.getMonth() - 1, 1);
+      const prevMonthObjects = ytdObjects.filter(o => {
+        const d = toDate(o[dateKey]);
+        return d && d.getFullYear() === prevMonthDate.getFullYear() && d.getMonth() === prevMonthDate.getMonth();
+      });
+
+      const ytdTotalQty = ytdObjects.reduce((s, o) => s + rowQty(o), 0);
+      const ytdTotalSupply = ytdObjects.reduce((s, o) => s + rowSupply(o), 0);
+      const ytdTotalPurchase = ytdObjects.reduce((s, o) => s + rowPurchase(o), 0);
+      const ytdTotalTax = ytdObjects.reduce((s, o) => s + rowTax(o), 0);
+      const thisMonthQty = thisMonthObjects.reduce((s, o) => s + rowQty(o), 0);
+      const thisMonthSupply = thisMonthObjects.reduce((s, o) => s + rowSupply(o), 0);
+      const thisMonthPurchase = thisMonthObjects.reduce((s, o) => s + rowPurchase(o), 0);
+      const prevMonthQty = prevMonthObjects.reduce((s, o) => s + rowQty(o), 0);
+      const prevMonthSupply = prevMonthObjects.reduce((s, o) => s + rowSupply(o), 0);
+      const prevMonthPurchase = prevMonthObjects.reduce((s, o) => s + rowPurchase(o), 0);
 
       function getFlowKey(date) {
         if (!date) return '-';
@@ -952,13 +999,47 @@
         productMap[name].tax += rowTax(o);
       });
 
+      const categoryMap = {};
+      objects.forEach(o => {
+        const name = categoryKey ? (String(o[categoryKey] || '').trim() || '카테고리 미지정') : '카테고리 미지정';
+        if (!categoryMap[name]) {
+          categoryMap[name] = { name, qty: 0, supply: 0, purchase: 0, tax: 0, value: 0 };
+        }
+        categoryMap[name].qty += rowQty(o);
+        categoryMap[name].supply += rowSupply(o);
+        categoryMap[name].purchase += rowPurchase(o);
+        categoryMap[name].tax += rowTax(o);
+      });
+
       const productRank = Object.values(productMap)
         .map(r => ({ ...r, value: state.coupang.basis === 'purchase' ? r.purchase : r.supply }))
         .sort((a, b) => b.value - a.value);
 
+      const categoryRank = Object.values(categoryMap)
+        .filter(r => r.name && r.name !== '카테고리 미지정')
+        .map(r => ({ ...r, value: state.coupang.basis === 'purchase' ? r.purchase : r.supply }))
+        .sort((a, b) => b.value - a.value);
+
+      const monthlyMap = {};
+      objects.forEach(o => {
+        const d = toDate(o[dateKey]);
+        if (!d) return;
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (!monthlyMap[key]) monthlyMap[key] = { label: key, date: new Date(d.getFullYear(), d.getMonth(), 1), qty: 0, supply: 0, purchase: 0, tax: 0, value: 0 };
+        monthlyMap[key].qty += rowQty(o);
+        monthlyMap[key].supply += rowSupply(o);
+        monthlyMap[key].purchase += rowPurchase(o);
+        monthlyMap[key].tax += rowTax(o);
+      });
+
+      const monthlyFlow = Object.values(monthlyMap)
+        .sort((a,b) => a.date - b.date)
+        .map(r => ({ ...r, value: state.coupang.basis === 'purchase' ? r.purchase : r.supply }));
+
       return {
         headers,
         allObjects,
+        ytdObjects,
         periodObjects,
         objects,
         dateKey,
@@ -969,15 +1050,29 @@
         purchaseUnitKey,
         taxKey,
         productKey,
+        categoryKey,
         basisKey,
         totalQty,
         totalBasis,
         totalSupply,
         totalPurchase,
         totalTax,
+        ytdTotalQty,
+        ytdTotalSupply,
+        ytdTotalPurchase,
+        ytdTotalTax,
+        thisMonthQty,
+        thisMonthSupply,
+        thisMonthPurchase,
+        prevMonthQty,
+        prevMonthSupply,
+        prevMonthPurchase,
+        latestCoupangDate,
         dates: periodDates,
         dated,
-        productRank
+        monthlyFlow,
+        productRank,
+        categoryRank
       };
     }
 
@@ -988,7 +1083,7 @@
       if (!top.length) return '<div class="empty">품목 컬럼을 찾지 못했습니다. 쿠팡 기준 선택 카드의 감지 컬럼을 확인해 주세요.</div>';
       return `<div class="rank-chart">${top.map((r, i) => `
         <div class="rank-row">
-          <div class="rank-name">${i + 1}. ${r.name}</div>
+          <div class="rank-name" title="${r.name}">${i + 1}. ${r.name}</div>
           <div class="rank-track"><div class="rank-fill" style="width:${Math.max((r.value / max) * 100, 2)}%"></div></div>
           <div class="rank-value">${money(r.value)}</div>
           <div class="rank-qty">${fmt(r.qty)}개</div>
@@ -1067,10 +1162,18 @@
       const table = pageRows.map(o => `<tr>${headers.map(h => `<td>${o[h] || '-'}</td>`).join('')}</tr>`).join('');
 
       grid(`
-        ${metricCard('쿠팡 판매수량', a.qtyKey || '행 개수 기준', fmt(a.totalQty), '선택 기간 / 선택 날짜 기준', 'good', a.dated.slice(-7).map(r=>r.value))}
-        ${metricCard('공급가액 합계', a.supplyTotalKey || a.supplyUnitKey || '공급가 컬럼 없음', money(a.totalSupply), a.supplyTotalKey ? '총액 컬럼 합계' : '수량 × 공급가액', 'good', a.dated.slice(-7).map(r=>r.supply))}
-        ${metricCard('매입가 합계', a.purchaseTotalKey || a.purchaseUnitKey || '매입가 컬럼 없음', money(a.totalPurchase), a.purchaseTotalKey ? '총액 컬럼 합계' : '수량 × 매입가', 'warn', a.dated.slice(-7).map(r=>r.purchase))}
-        ${metricCard('세액 합계', a.taxKey || '공급가액 10% 추정', money(a.totalTax), a.taxKey ? '선택 기간 기준 세액 합계' : '공급가액 × 10%', 'warn', a.dated.slice(-7).map(r=>r.tax))}
+        ${metricCard('올해 누적 쿠팡 판매수량', a.qtyKey || '행 개수 기준', fmt(a.ytdTotalQty), `${a.latestCoupangDate.getFullYear()}년 전체 / 이번달 ${fmt(a.thisMonthQty)}개`, 'good', a.monthlyFlow.map(r=>r.qty))}
+        ${metricCard('올해 누적 공급가액', a.supplyTotalKey || a.supplyUnitKey || '공급가 컬럼 없음', money(a.ytdTotalSupply), `${a.latestCoupangDate.getFullYear()}년 전체 공급가액`, 'good', a.monthlyFlow.map(r=>r.supply))}
+        ${metricCard('이번달 판매수량', '전월 대비', fmt(a.thisMonthQty), `전월 ${fmt(a.prevMonthQty)}개 / ${changeRate(a.thisMonthQty, a.prevMonthQty)}`, changeTone(a.thisMonthQty, a.prevMonthQty), [a.prevMonthQty, a.thisMonthQty])}
+        ${metricCard('이번달 공급가액', '전월 대비', money(a.thisMonthSupply), `전월 ${money(a.prevMonthSupply)} / ${changeRate(a.thisMonthSupply, a.prevMonthSupply)}`, changeTone(a.thisMonthSupply, a.prevMonthSupply), [a.prevMonthSupply, a.thisMonthSupply])}
+
+        <article class="card wide"><div class="card-head"><div><div class="card-title">월별 쿠팡 출고 금액</div><div class="card-sub">${basisLabel} / 월별 공급가액·수량 흐름</div></div><span class="badge">월별</span></div>
+          ${renderCoupangFlowChart(a.monthlyFlow)}
+        </article>
+
+        <article class="card side"><div class="card-head"><div><div class="card-title">카테고리별 출고 현황</div><div class="card-sub">카테고리별 수량 및 금액</div></div><span class="badge">${a.categoryKey || '카테고리 없음'}</span></div>
+          ${renderProductRankChart(a.categoryRank, 8)}
+        </article>
 
         <article class="card wide"><div class="card-head"><div><div class="card-title">쿠팡 판매 흐름</div><div class="card-sub">${basisLabel} / ${flowLabel} / 금액+수량 동시 표시</div></div><span class="badge">${a.basisKey || '기준 컬럼 없음'}</span></div>
           <div class="table-tools">
@@ -1088,7 +1191,7 @@
           ${renderCoupangFlowChart(a.dated)}
         </article>
 
-        <article class="card full"><div class="card-head"><div><div class="card-title">품목별 금액 순위</div><div class="card-sub">${basisLabel} / 선택 기간 기준 상위 10개 품목</div></div><span class="badge">금액 큰 순</span></div>${renderProductRankChart(a.productRank, 10)}</article>
+        <article class="card half"><div class="card-head"><div><div class="card-title">품목별 금액 순위</div><div class="card-sub">${basisLabel} / 선택 기간 기준 상위 10개 품목</div></div><span class="badge">금액 큰 순</span></div>${renderProductRankChart(a.productRank, 10)}</article>
 
         <article class="card side"><div class="card-head"><div><div class="card-title">쿠팡 기준 선택</div><div class="card-sub">날짜별 / 금액 기준 전환</div></div></div><div class="issue-list">
           <div class="issue"><div class="issue-icon">📅</div><div><strong>날짜 선택</strong><span>${a.dateKey || '날짜열 감지 안됨'}</span></div><div></div></div>
@@ -1099,6 +1202,7 @@
             <option value="purchase" ${state.coupang.basis === 'purchase' ? 'selected' : ''}>매입가 기준</option>
           </select>
           <div class="issue"><div class="issue-icon">🔎</div><div><strong>감지 컬럼</strong><span>수량: ${a.qtyKey || '-'} / 공급: ${a.supplyTotalKey || a.supplyUnitKey || '-'} / 매입: ${a.purchaseTotalKey || a.purchaseUnitKey || '-'}</span></div><div class="issue-num">확인</div></div>
+          <div class="issue"><div class="issue-icon">🏷️</div><div><strong>카테고리</strong><span>${a.categoryKey || '카테고리 컬럼 감지 안됨'}</span></div><div class="issue-num">${fmt(a.categoryRank.length)}</div></div>
         </div></article>
 
         <article class="card full"><div class="card-head"><div><div class="card-title">쿠팡 원본 데이터 전체 보기</div><div class="card-sub">기간 내 ${fmt(a.periodObjects.length)}행 / 현재 표시 ${fmt(a.objects.length)}행 / 페이지당 ${fmt(state.coupang.pageSize)}행</div></div></div>
@@ -1326,7 +1430,7 @@
       return `<div class="rank-chart">${top.map((r, i) => {
         const value = r.value || r.qty || 0;
         return `<div class="rank-row">
-          <div class="rank-name">${i + 1}. ${r.name}</div>
+          <div class="rank-name" title="${r.name}">${i + 1}. ${r.name}</div>
           <div class="rank-track"><div class="rank-fill" style="width:${Math.max((value / max) * 100, 2)}%"></div></div>
           <div class="rank-value">${fmt(value)}${valueLabel}</div>
           <div class="rank-qty">${r.defect ? `불량 ${fmt(r.defect)}` : ''}</div>
