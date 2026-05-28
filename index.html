@@ -407,7 +407,15 @@
     function usd(n) { return `$${fmt(Math.round(Number(n || 0)))}`; }
     function usdToKrw(n) { return Math.round(Number(n || 0) * 1500); }
     function pct(num, den) { return den ? `${((num / den) * 100).toFixed(2)}%` : '0.00%'; }
-    function dateStr(d) { return d ? d.toISOString().slice(0, 10) : '-'; }
+    function dateStr(d) {
+      if (!d) return '-';
+      const date = new Date(d);
+      if (Number.isNaN(date.getTime())) return '-';
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
     function grid(html) { document.getElementById('dashboardGrid').innerHTML = html; }
 
     function rowsToObjects(rows) {
@@ -1494,7 +1502,11 @@
         upcomingDailyMap[d].usd += toNum(o[usdKey]);
         upcomingDailyMap[d].qty += 1;
       });
-      const upcomingDaily = Object.values(upcomingDailyMap).sort((a,b) => a.name.localeCompare(b.name));
+      const upcomingDaily = Object.values(upcomingDailyMap).sort((a,b) => {
+        const da = toDate(a.name);
+        const db = toDate(b.name);
+        return (da?.getTime() || 0) - (db?.getTime() || 0);
+      });
 
       const scheduledPaymentsInPeriod = objects.filter(o => {
         const d = toDate(o[dateKey]);
