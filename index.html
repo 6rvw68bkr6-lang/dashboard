@@ -20,18 +20,30 @@
     }
 
     * { box-sizing: border-box; }
+    html { background: var(--bg); overflow-x: hidden; }
     body {
       margin: 0;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(91,124,250,.25), transparent 30%),
-        radial-gradient(circle at 85% 5%, rgba(34,211,238,.16), transparent 25%),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
       font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
     }
 
-    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(91,124,250,.22), transparent 30%),
+        radial-gradient(circle at 85% 5%, rgba(34,211,238,.14), transparent 25%),
+        linear-gradient(180deg, rgba(11,16,32,1), rgba(11,16,32,1));
+    }
+
+    .app { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; position: relative; z-index: 1; overflow-x: hidden; }
     .sidebar { padding: 28px 20px; border-right: 1px solid var(--panel-line); background: rgba(9,14,28,.84); backdrop-filter: blur(18px); }
     .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; }
     .logo { width: 42px; height: 42px; border-radius: 14px; background: linear-gradient(135deg, var(--blue), var(--cyan)); display: grid; place-items: center; font-weight: 900; }
@@ -44,7 +56,7 @@
     .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; }
     .active .dot { background: var(--cyan); box-shadow: 0 0 18px var(--cyan); }
 
-    main { padding: 28px; }
+    main { padding: 28px; min-width: 0; overflow-x: hidden; }
     .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 24px; }
     .title h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: -0.04em; }
     .title p { margin: 0; color: var(--muted); font-size: 14px; }
@@ -57,7 +69,7 @@
     button.active-mode { background: linear-gradient(135deg, rgba(34,211,238,.45), rgba(52,211,153,.25)); border-color: rgba(52,211,153,.45); color: #fff; font-weight: 800; }
 
     .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
-    .card { background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025)); border: 1px solid var(--panel-line); border-radius: var(--radius); padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.22); position: relative; overflow: hidden; }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025)); border: 1px solid var(--panel-line); border-radius: var(--radius); padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.22); position: relative; overflow: hidden; min-width: 0; }
     .card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 85% 0%, rgba(255,255,255,.08), transparent 28%); pointer-events: none; }
     .kpi { grid-column: span 3; min-height: 146px; }
     .kpi.double { grid-column: span 6; }
@@ -2423,7 +2435,7 @@
 
       const commonCards = `
         ${viewToggle('production')}
-        ${metricCard('올해 누적 제작수량','제작_일별 YTD 기준',fmt(a.totalQty),`${latestProdDate.getFullYear()}년 전체 / 이번달 ${fmt(monthQty)}개`,'good',a.daily.map(r=>r.qty))}
+        ${metricCard('올해 누적 제작수량','제작_일별 YTD 기준',fmt(a.totalQty),`${latestProdDate.getFullYear()}년 전체 / 이번달 ${fmt(monthQty)}개 / 불량률 ${a.defectRate}`,'good',a.daily.map(r=>r.qty))}
         ${metricCard('올해 누적 불량 / 폐기','YTD 품질 이슈',fmt(a.totalDefect),`올해 불량률 ${a.defectRate} / 목표 5% 미만`,a.totalDefect > 0 ? 'warn' : 'good',a.daily.map(r=>r.defect))}
         ${metricCard('이번달 제작수량','전월 대비',fmt(monthQty),`전월 ${fmt(prevMonthQty)}개 / ${changeRate(monthQty, prevMonthQty)}`,changeTone(monthQty, prevMonthQty),thisMonthProd.map(r=>r.qty))}
         ${metricCard('이번달 불량률','전월 대비',pct(monthDefect, monthQty),`전월 ${pct(prevMonthDefect, prevMonthQty)} / ${changeRate(monthDefectRate, prevMonthDefectRate)}`,changeTone(monthDefectRate, prevMonthDefectRate, true),thisMonthProd.map(r=>r.defect))}
@@ -2984,9 +2996,38 @@
       renderInventory();
     }
 
+    let inventorySearchComposing = false;
+
     function setInventorySearch(value) {
+      // 입력 중에는 값만 저장하고, 화면 전체 재렌더링은 하지 않는다.
+      // 이렇게 해야 한글 자음/모음 조합이 깨지지 않고 입력 속도도 느려지지 않는다.
+      state.inventory.search = value;
+    }
+
+    function submitInventorySearch(value) {
       state.inventory.search = value;
       renderInventory();
+    }
+
+    function clearInventorySearch() {
+      state.inventory.search = '';
+      renderInventory();
+    }
+
+    function startInventorySearchComposition() {
+      inventorySearchComposing = true;
+    }
+
+    function endInventorySearchComposition(value) {
+      inventorySearchComposing = false;
+      setInventorySearch(value);
+    }
+
+    function handleInventorySearchKeydown(event, value) {
+      if (event.key === 'Enter' && !inventorySearchComposing) {
+        event.preventDefault();
+        submitInventorySearch(value);
+      }
     }
 
     function openInventoryProduct(product) {
@@ -3127,7 +3168,7 @@
 
         <article class="card full"><div class="card-head"><div><div class="card-title">재고 검색 / 카테고리 필터</div><div class="card-sub">제품군별로 먼저 나누고, 필요한 제품만 클릭해서 상세 확인</div></div><span class="badge">제품 블록 ${fmt(a.blocks?.length || 0)}개 · 수량매칭 ${fmt(filteredRows.reduce((s,r)=>s+r.qty,0))}개</span></div>
           <div class="table-tools">
-            <div class="tool-left"><input id="inventorySearch" type="text" placeholder="제품 / 기종 / 색상 / 재입고 / 품절여부 검색" value="${state.inventory.search || ''}" oninput="setInventorySearch(this.value)" style="border:1px solid var(--panel-line);background:rgba(255,255,255,.05);color:#d7def4;padding:10px 14px;border-radius:999px;min-width:360px;" /><div class="pill">위험 → 주의 → 정상 순 정렬</div></div>
+            <div class="tool-left"><input id="inventorySearch" type="search" autocomplete="off" placeholder="제품 / 기종 / 색상 / 재입고 / 품절여부 입력 후 Enter" value="${String(state.inventory.search || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" oncompositionstart="startInventorySearchComposition()" oncompositionend="endInventorySearchComposition(this.value)" oninput="setInventorySearch(this.value)" onkeydown="handleInventorySearchKeydown(event, this.value)" style="border:1px solid var(--panel-line);background:rgba(255,255,255,.05);color:#d7def4;padding:10px 14px;border-radius:999px;min-width:360px;" /><button onclick="submitInventorySearch(document.getElementById('inventorySearch')?.value || '')">검색</button><button onclick="clearInventorySearch()">초기화</button><div class="pill">검색어 입력 후 Enter 또는 검색 버튼</div></div>
           </div>
           <div class="table-tools" style="margin-top:12px;">
             <div class="tool-left">
