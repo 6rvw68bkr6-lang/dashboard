@@ -283,6 +283,16 @@
 
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.58); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; }
     .modal-card { width: min(980px, 100%); max-height: 86vh; overflow: auto; background: #10172a; border: 1px solid var(--panel-line); border-radius: 24px; box-shadow: 0 30px 90px rgba(0,0,0,.45); padding: 22px; }
+    .modal-card.inventory-modal { width: min(1520px, calc(100vw - 48px)); }
+    .inventory-modal .table-wrap { overflow-x: auto; }
+    .inventory-modal table { min-width: 1380px; table-layout: auto; }
+    .inventory-modal th, .inventory-modal td { white-space: nowrap; }
+    .inventory-modal th:nth-child(1), .inventory-modal td:nth-child(1) { min-width: 180px; }
+    .inventory-modal th:nth-child(2), .inventory-modal td:nth-child(2) { min-width: 130px; }
+    .inventory-modal th:nth-child(10), .inventory-modal td:nth-child(10),
+    .inventory-modal th:nth-child(12), .inventory-modal td:nth-child(12) { min-width: 150px; }
+    .inventory-modal .inventory-extra-col { display: none; }
+    .inventory-modal.show-options .inventory-extra-col { display: table-cell; }
     .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
     .modal-close { border-radius: 999px; padding: 8px 12px; }
 
@@ -3049,6 +3059,13 @@
       }
     }
 
+    function toggleInventoryOptionColumns(button) {
+      const modal = button.closest('.inventory-modal');
+      if (!modal) return;
+      const isOpen = modal.classList.toggle('show-options');
+      button.textContent = isOpen ? '옵션 컬럼 접기' : '옵션 컬럼 펼치기';
+    }
+
     function openInventoryProduct(product) {
       state.inventory.selectedProduct = product;
       renderInventory();
@@ -3135,7 +3152,7 @@
       });
       const selectedModal = selectedProduct ? `
         <div class="modal-backdrop" onclick="closeInventoryProduct()">
-          <div class="modal-card" onclick="event.stopPropagation()">
+          <div class="modal-card inventory-modal" onclick="event.stopPropagation()">
             <div class="modal-head">
               <div><div class="card-title">${selectedProduct} 재고 상세</div><div class="card-sub">기종 / 색상 / 재고 / 소진기간 / 재입고일정 상세</div></div>
               <button class="modal-close" onclick="closeInventoryProduct()">닫기</button>
@@ -3151,19 +3168,20 @@
                 <button onclick="setInventorySort('product')" class="${state.inventory.sortKey === 'product' ? 'active-mode' : ''}">제품명 ${state.inventory.sortKey === 'product' ? (state.inventory.sortDir === 'asc' ? '↑' : '↓') : ''}</button>
                 <button onclick="setInventorySort('qty')" class="${state.inventory.sortKey === 'qty' ? 'active-mode' : ''}">재고 ${state.inventory.sortKey === 'qty' ? (state.inventory.sortDir === 'asc' ? '↑' : '↓') : ''}</button>
                 <button onclick="setInventorySort('months')" class="${state.inventory.sortKey === 'months' ? 'active-mode' : ''}">소진기간 ${state.inventory.sortKey === 'months' ? (state.inventory.sortDir === 'asc' ? '↑' : '↓') : ''}</button>
+                <button onclick="toggleInventoryOptionColumns(this)">옵션 컬럼 펼치기</button>
               </div>
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>제품</th><th>기종</th><th>케이스색상</th><th>프레임색상</th><th>카드수납</th><th>옵션</th><th>색상</th><th class="right">재고</th><th class="right">소진기간</th><th>소진시점</th><th>품절여부</th><th>재입고일정</th><th>상태</th></tr></thead>
+                <thead><tr><th>제품</th><th>기종</th><th class="inventory-extra-col">케이스색상</th><th class="inventory-extra-col">프레임색상</th><th class="inventory-extra-col">카드수납</th><th class="inventory-extra-col">옵션</th><th>색상</th><th class="right">재고</th><th class="right">소진기간</th><th>소진시점</th><th>품절여부</th><th>재입고일정</th><th>상태</th></tr></thead>
                 <tbody>${selectedRowsSorted.map(r=>`
                   <tr>
                     <td>${r.product}</td>
                     <td>${r.variantParts.find(p=>p.label==='기종')?.value || '-'}</td>
-                    <td>${r.variantParts.find(p=>p.label==='케이스색상')?.value || '-'}</td>
-                    <td>${r.variantParts.find(p=>p.label==='프레임색상')?.value || '-'}</td>
-                    <td>${r.variantParts.find(p=>p.label==='카드수납')?.value || '-'}</td>
-                    <td>${r.variantParts.find(p=>p.label==='옵션')?.value || r.variantParts.filter(p=>!['기종','케이스색상','프레임색상','카드수납','색상'].includes(p.label)).map(p=>`${p.label}: ${p.value}`).join(' / ') || '-'}</td>
+                    <td class="inventory-extra-col">${r.variantParts.find(p=>p.label==='케이스색상')?.value || '-'}</td>
+                    <td class="inventory-extra-col">${r.variantParts.find(p=>p.label==='프레임색상')?.value || '-'}</td>
+                    <td class="inventory-extra-col">${r.variantParts.find(p=>p.label==='카드수납')?.value || '-'}</td>
+                    <td class="inventory-extra-col">${r.variantParts.find(p=>p.label==='옵션')?.value || r.variantParts.filter(p=>!['기종','케이스색상','프레임색상','카드수납','색상'].includes(p.label)).map(p=>`${p.label}: ${p.value}`).join(' / ') || '-'}</td>
                     <td>${r.variantParts.find(p=>p.label==='색상')?.value || r.variantParts.find(p=>p.label==='옵션')?.value || '-'}</td>
                     <td class="right">${fmt(r.qty)}</td>
                     <td class="right">${r.months ? `${r.months}개월` : '-'}</td>
