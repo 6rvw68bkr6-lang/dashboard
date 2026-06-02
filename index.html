@@ -468,6 +468,22 @@
       const day = String(date.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
     }
+    function todayDate() {
+      const d = new Date();
+      d.setHours(0,0,0,0);
+      return d;
+    }
+
+    function endOfDay(d) {
+      const x = new Date(d);
+      x.setHours(23,59,59,999);
+      return x;
+    }
+
+    function endOfMonth(d) {
+      return endOfDay(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+    }
+
     function grid(html) { document.getElementById('dashboardGrid').innerHTML = html; }
 
     function rowsToObjects(rows) {
@@ -482,23 +498,24 @@
     function getCurrentPeriodRange() {
       const option = document.getElementById('periodSelect').value;
       const allDates = state.shipping.map(r => r.date).filter(Boolean);
-      if (!allDates.length) return { start: null, end: null };
-
-      const maxDate = new Date(Math.max(...allDates.map(d => d.getTime())));
-      const minDate = new Date(Math.min(...allDates.map(d => d.getTime())));
+      const minDate = allDates.length
+        ? new Date(Math.min(...allDates.map(d => d.getTime())))
+        : todayDate();
       let start;
-      let end = maxDate;
+      let end = endOfDay(todayDate());
 
       if (option === 'custom') {
         const startValue = document.getElementById('startDateInput').value;
         const endValue = document.getElementById('endDateInput').value;
         start = startValue ? new Date(startValue + 'T00:00:00') : minDate;
-        end = endValue ? new Date(endValue + 'T00:00:00') : maxDate;
+        end = endValue ? endOfDay(new Date(endValue + 'T00:00:00')) : endOfDay(todayDate());
         if (start > end) [start, end] = [end, start];
       } else if (option === 'month') {
-        start = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+        const today = todayDate();
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = endOfMonth(today);
       } else {
-        start = new Date(maxDate);
+        start = todayDate();
         start.setDate(start.getDate() - Number(option) + 1);
       }
 
@@ -579,26 +596,34 @@
       const customBox = document.getElementById('customDateBox');
       customBox.classList.toggle('show', option === 'custom');
 
-      if (!data.length) return [];
-      const maxDate = new Date(Math.max(...data.map(r => r.date.getTime())));
-      const minDate = new Date(Math.min(...data.map(r => r.date.getTime())));
+      const allDates = data.map(r => r.date).filter(Boolean);
+      const minDate = allDates.length
+        ? new Date(Math.min(...allDates.map(d => d.getTime())))
+        : todayDate();
       let start;
-      let end = maxDate;
+      let end = endOfDay(todayDate());
 
       if (option === 'custom') {
         const startValue = document.getElementById('startDateInput').value;
         const endValue = document.getElementById('endDateInput').value;
         start = startValue ? new Date(startValue + 'T00:00:00') : minDate;
-        end = endValue ? new Date(endValue + 'T00:00:00') : maxDate;
+        end = endValue ? endOfDay(new Date(endValue + 'T00:00:00')) : endOfDay(todayDate());
         if (start > end) [start, end] = [end, start];
       } else if (option === 'month') {
-        start = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+        const today = todayDate();
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = endOfMonth(today);
       } else {
-        start = new Date(maxDate);
+        start = todayDate();
         start.setDate(start.getDate() - Number(option) + 1);
       }
 
-      const filtered = data.filter(r => r.date >= start && r.date <= end);
+      const filtered = data.filter(r => {
+        if (!r.date) return false;
+        const compare = new Date(r.date);
+        compare.setHours(0,0,0,0);
+        return compare >= start && compare <= end;
+      });
       document.getElementById('periodLabel').textContent = `${dateStr(start)} ~ ${dateStr(end)}`;
       return filtered;
     }
@@ -990,7 +1015,7 @@
     }
 
     function renderShipping() {
-      const baseDate = getLatestDate(state.shipping);
+      const baseDate = todayDate();
       const ytdShipping = yearData(state.shipping, baseDate);
       let d = [...ytdShipping];
       const availableMonths = [...new Set(ytdShipping.map(r => `${r.date.getFullYear()}-${String(r.date.getMonth()+1).padStart(2,'0')}`))].sort();
@@ -1160,10 +1185,7 @@
         });
       }
 
-      const latestCoupangDate = (() => {
-        const dates = dateKey ? allObjects.map(o => toDate(o[dateKey])).filter(Boolean) : [];
-        return dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
-      })();
+      const latestCoupangDate = todayDate();
 
       // 쿠팡 판매 탭은 택배/제작처럼 운영 KPI 기준으로 관리하므로,
       // 상단 기간 필터가 아니라 최신 판매일이 속한 연도 전체(YTD)를 기본 기준으로 사용한다.
@@ -1673,10 +1695,7 @@
       const reasonKey = findHeader(headers, ['불량사유','폐기사유','원인','이슈','비고','메모']);
       const targetKey = findHeader(headers, ['목표수량','목표','계획수량','계획']);
 
-      const latestProductionDate = (() => {
-        const dates = dateKey ? allObjects.map(o => toDate(o[dateKey])).filter(Boolean) : [];
-        return dates.length ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
-      })();
+      const latestProductionDate = todayDate();
 
       const objects = dateKey
         ? (scope === 'year'
@@ -2420,7 +2439,7 @@
       }
 
       const previewHeaders = a.headers;
-      const latestProdDate = a.daily.length ? new Date(Math.max(...a.daily.map(r => r.date.getTime()))) : new Date();
+      const latestProdDate = todayDate();
       const thisMonthProd = a.daily.filter(r => r.date.getFullYear() === latestProdDate.getFullYear() && r.date.getMonth() === latestProdDate.getMonth());
       const prevMonthDate = new Date(latestProdDate.getFullYear(), latestProdDate.getMonth() - 1, 1);
       const prevMonthProd = a.daily.filter(r => r.date.getFullYear() === prevMonthDate.getFullYear() && r.date.getMonth() === prevMonthDate.getMonth());
