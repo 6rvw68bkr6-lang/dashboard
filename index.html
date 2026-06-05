@@ -1243,7 +1243,19 @@
                 const d = toDate(o[dateKey]);
                 return d && d.getFullYear() === latestProductionDate.getFullYear();
               })
-            : filterObjectsByDate(allObjects, dateKey))
+            : scope === 'previousPeriod'
+              ? (() => {
+                  const currentRange = getCurrentPeriodRange();
+                  const previousRange = getPreviousPeriodRange(currentRange.start, currentRange.end);
+                  return allObjects.filter(o => {
+                    const d = toDate(o[dateKey]);
+                    if (!d) return false;
+                    const compare = new Date(d);
+                    compare.setHours(0,0,0,0);
+                    return compare >= previousRange.start && compare <= previousRange.end;
+                  });
+                })()
+              : filterObjectsByDate(allObjects, dateKey))
         : allObjects;
       const numKeys = headers.filter(h => objects.some(o => toNum(o[h]) > 0));
       const mainKey = numKeys.find(h => config.primary.some(k => String(h).replaceAll(' ', '').includes(k))) || numKeys[0];
@@ -1822,7 +1834,19 @@
                 const d = toDate(o[dateKey]);
                 return d && d.getFullYear() === latestProductionDate.getFullYear();
               })
-            : filterObjectsByDate(allObjects, dateKey))
+            : scope === 'previousPeriod'
+              ? (() => {
+                  const currentRange = getCurrentPeriodRange();
+                  const previousRange = getPreviousPeriodRange(currentRange.start, currentRange.end);
+                  return allObjects.filter(o => {
+                    const d = toDate(o[dateKey]);
+                    if (!d) return false;
+                    const compare = new Date(d);
+                    compare.setHours(0,0,0,0);
+                    return compare >= previousRange.start && compare <= previousRange.end;
+                  });
+                })()
+              : filterObjectsByDate(allObjects, dateKey))
         : allObjects;
 
       function rowQty(o) {
@@ -2552,6 +2576,7 @@
     function renderProduction() {
       const a = getProductionAnalysis('year');
       const periodA = getProductionAnalysis('period');
+      const previousPeriodA = getProductionAnalysis('previousPeriod');
       if (!a.headers.length) {
         grid(`<article class="card full"><div class="card-head"><div><div class="card-title">제작 현황</div><div class="card-sub">데이터 로드 실패</div></div></div><div class="empty">제작_일별 시트 데이터를 불러오지 못했습니다.</div></article>`);
         return;
@@ -2569,6 +2594,20 @@
       const monthDefectRate = monthQty ? monthDefect / monthQty : 0;
       const prevMonthDefectRate = prevMonthQty ? prevMonthDefect / prevMonthQty : 0;
       const periodDefectRate = periodA.totalQty ? pct(periodA.totalDefect, periodA.totalQty) : '0.00%';
+      const periodDefectRateNumber = periodA.totalQty ? periodA.totalDefect / periodA.totalQty : 0;
+      const previousPeriodDefectRateNumber = previousPeriodA.totalQty ? previousPeriodA.totalDefect / previousPeriodA.totalQty : 0;
+      const periodGoodRateNumber = periodA.totalQty ? periodA.totalGood / periodA.totalQty : 0;
+      const previousPeriodGoodRateNumber = previousPeriodA.totalQty ? previousPeriodA.totalGood / previousPeriodA.totalQty : 0;
+      const productionPeriodRange = getCurrentPeriodRange();
+      const productionPreviousPeriodRange = getPreviousPeriodRange(productionPeriodRange.start, productionPeriodRange.end);
+      const productionPeriodLabel = document.getElementById('periodLabel').textContent;
+      const productionPreviousPeriodLabel = `${dateStr(productionPreviousPeriodRange.start)} ~ ${dateStr(productionPreviousPeriodRange.end)}`;
+      const productionComparisonItems = [
+        { label: '제작수량', current: periodA.totalQty, previous: previousPeriodA.totalQty },
+        { label: '양품률', current: periodGoodRateNumber * 100, previous: previousPeriodGoodRateNumber * 100, type: 'rate' },
+        { label: '불량률', current: periodDefectRateNumber * 100, previous: previousPeriodDefectRateNumber * 100, type: 'rate', lowerIsBetter: true },
+        { label: '불량/폐기', current: periodA.totalDefect, previous: previousPeriodA.totalDefect, lowerIsBetter: true }
+      ];
       const previewRows = a.objects.slice(0, 30).map(o => `<tr>${previewHeaders.map(h => `<td>${o[h] || '-'}</td>`).join('')}</tr>`).join('');
 
       const commonCards = `
@@ -2581,9 +2620,11 @@
       `;
       const summaryCards = `
         ${viewToggle('production')}
-        ${metricCard('이번달 제작수량','전월 대비',fmt(monthQty),`전월 ${fmt(prevMonthQty)}개 / ${changeRate(monthQty, prevMonthQty)}`,changeTone(monthQty, prevMonthQty),thisMonthProd.map(r=>r.qty))}
-        ${metricCard('이번달 불량률','전월 대비',pct(monthDefect, monthQty),`전월 ${pct(prevMonthDefect, prevMonthQty)} / ${changeRate(monthDefectRate, prevMonthDefectRate)}`,changeTone(monthDefectRate, prevMonthDefectRate, true),thisMonthProd.map(r=>r.defect))}
-        ${metricCard('선택기간 제작수량','상단 기간 선택 기준',fmt(periodA.totalQty),`${document.getElementById('periodLabel').textContent} / 불량률 ${periodDefectRate}`,periodA.totalDefect > 0 ? 'warn' : 'good',periodA.daily.map(r=>r.qty))}
+        ${metricCard('선택기간 제작수량','직전 동일 기간 대비',fmt(periodA.totalQty),`${productionPeriodLabel} / 직전 ${productionPreviousPeriodLabel} ${fmt(previousPeriodA.totalQty)}개 / ${changeRate(periodA.totalQty, previousPeriodA.totalQty)}`,changeTone(periodA.totalQty, previousPeriodA.totalQty),periodA.daily.map(r=>r.qty))}
+        ${metricCard('선택기간 양품률','직전 동일 기간 대비',pct(periodA.totalGood, periodA.totalQty),`직전 ${pct(previousPeriodA.totalGood, previousPeriodA.totalQty)} / ${changeRate(periodGoodRateNumber, previousPeriodGoodRateNumber)}`,changeTone(periodGoodRateNumber, previousPeriodGoodRateNumber),periodA.daily.map(r=>r.good))}
+        ${metricCard('선택기간 불량률','직전 동일 기간 대비',pct(periodA.totalDefect, periodA.totalQty),`직전 ${pct(previousPeriodA.totalDefect, previousPeriodA.totalQty)} / ${changeRate(periodDefectRateNumber, previousPeriodDefectRateNumber)}`,changeTone(periodDefectRateNumber, previousPeriodDefectRateNumber, true),periodA.daily.map(r=>r.defect))}
+        ${metricCard('선택기간 불량/폐기','직전 동일 기간 대비',`${fmt(periodA.totalDefect)}개`,`직전 ${fmt(previousPeriodA.totalDefect)}개 / ${changeRate(periodA.totalDefect, previousPeriodA.totalDefect)}`,changeTone(periodA.totalDefect, previousPeriodA.totalDefect, true),periodA.daily.map(r=>r.defect))}
+        <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">제작수량, 양품률, 불량률, 불량/폐기를 동일 길이 기간으로 비교</div></div><span class="badge">가로 막대 비교</span></div>${renderPeriodComparisonChart(productionComparisonItems, { current: productionPeriodLabel, previous: productionPreviousPeriodLabel })}</article>
       `;
       if (state.viewMode.production === 'summary') {
         grid(`${summaryCards}
