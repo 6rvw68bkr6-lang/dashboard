@@ -1164,6 +1164,7 @@
       `;
       const summaryCards = `
         ${viewToggle('shipping')}
+        <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">출고량, 누락률, 오배송률, 이슈건수를 동일 길이 기간으로 비교</div></div><span class="badge">막대 비교</span></div>${renderPeriodComparisonChart(periodComparisonItems, { current: periodLabelText, previous: previousPeriodLabel })}</article>
         ${metricCard('선택기간 출고량','직전 동일 기간 대비',fmt(periodShip),`${periodLabelText} / 직전 ${previousPeriodLabel} ${fmt(previousPeriodShip)}건 / ${changeRate(periodShip, previousPeriodShip)}`,changeTone(periodShip, previousPeriodShip),periodShipping.slice(-7).map(r=>r.shipments))}
         ${metricCard('선택기간 누락률','직전 동일 기간 대비',pct(periodMissing, periodShip),`직전 ${pct(previousPeriodMissing, previousPeriodShip)} / ${changeRate(periodMissingRate, previousPeriodMissingRate)}`,changeTone(periodMissingRate, previousPeriodMissingRate, true),periodShipping.slice(-7).map(r=>r.missing))}
         ${metricCard('선택기간 오배송률','직전 동일 기간 대비',pct(periodMis, periodShip),`직전 ${pct(previousPeriodMis, previousPeriodShip)} / ${changeRate(periodMisRate, previousPeriodMisRate)}`,changeTone(periodMisRate, previousPeriodMisRate, true),periodShipping.slice(-7).map(r=>r.misdelivery))}
@@ -1171,7 +1172,7 @@
       `;
       if (state.viewMode.shipping === 'summary') {
         grid(`${summaryCards}
-          <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">출고량, 누락률, 오배송률, 이슈건수를 동일 길이 기간으로 비교</div></div><span class="badge">막대 비교</span></div>${renderPeriodComparisonChart(periodComparisonItems, { current: periodLabelText, previous: previousPeriodLabel })}</article>
+
           <article class="card half"><div class="card-head"><div><div class="card-title">월별 출고 비교</div><div class="card-sub">올해 월별 출고량 비교</div></div></div>${renderBarChart(groupShippingData(yearData(state.shipping, baseDate),'monthly'),'shipments','label',{hideZero:true})}</article>
           <article class="card half"><div class="card-head"><div><div class="card-title">택배 이슈 요약</div><div class="card-sub">선택 월 누락/오배송 발생일</div></div></div><div class="issue-list">${d.filter(r=>r.missing+r.misdelivery>0).slice(-6).map(r=>`<div class="issue"><div class="issue-icon">!</div><div><strong>${dateStr(r.date)}</strong><span>누락 ${fmt(r.missing)}건 / 오배송 ${fmt(r.misdelivery)}건</span></div><div class="issue-num">${fmt(r.missing+r.misdelivery)}</div></div>`).join('') || '<div class="empty">선택 월 내 택배 이슈가 없습니다.</div>'}</div></article>
         `);
