@@ -638,6 +638,30 @@
       return filtered;
     }
 
+    function getPreviousPeriodRange(start, end) {
+      const startDate = new Date(start);
+      startDate.setHours(0,0,0,0);
+      const endDate = new Date(end);
+      endDate.setHours(23,59,59,999);
+      const days = Math.max(1, Math.round((endDate - startDate) / 86400000) + 1);
+      const previousEnd = new Date(startDate);
+      previousEnd.setDate(previousEnd.getDate() - 1);
+      previousEnd.setHours(23,59,59,999);
+      const previousStart = new Date(previousEnd);
+      previousStart.setDate(previousStart.getDate() - days + 1);
+      previousStart.setHours(0,0,0,0);
+      return { start: previousStart, end: previousEnd, days };
+    }
+
+    function filterShippingByRange(data, range) {
+      if (!range || !range.start || !range.end) return [];
+      return data.filter(r => {
+        if (!r.date) return false;
+        const compare = new Date(r.date);
+        compare.setHours(0,0,0,0);
+        return compare >= range.start && compare <= range.end;
+      });
+    }
     function applyPeriodAndRender() {
       if (!state.shipping.length) return;
       state.filteredShipping = filterByPeriod(state.shipping);
@@ -1052,6 +1076,19 @@
       const periodMissing = sumMissing(periodShipping);
       const periodMis = sumMis(periodShipping);
       const periodIssues = periodMissing + periodMis;
+      const periodRange = getCurrentPeriodRange();
+      const previousPeriodRange = getPreviousPeriodRange(periodRange.start, periodRange.end);
+      const previousPeriodShipping = filterShippingByRange(state.shipping, previousPeriodRange);
+      const previousPeriodShip = sumShip(previousPeriodShipping);
+      const previousPeriodMissing = sumMissing(previousPeriodShipping);
+      const previousPeriodMis = sumMis(previousPeriodShipping);
+      const previousPeriodIssues = previousPeriodMissing + previousPeriodMis;
+      const periodMissingRate = periodShip ? periodMissing / periodShip : 0;
+      const previousPeriodMissingRate = previousPeriodShip ? previousPeriodMissing / previousPeriodShip : 0;
+      const periodMisRate = periodShip ? periodMis / periodShip : 0;
+      const previousPeriodMisRate = previousPeriodShip ? previousPeriodMis / previousPeriodShip : 0;
+      const periodLabelText = document.getElementById('periodLabel').textContent;
+      const previousPeriodLabel = `${dateStr(previousPeriodRange.start)} ~ ${dateStr(previousPeriodRange.end)}`;
       const monthShip = sumShip(thisMonth);
       const prevShip = sumShip(prevMonth);
       const monthMissingRate = monthShip ? sumMissing(thisMonth) / monthShip : 0;
@@ -1069,14 +1106,14 @@
         ${metricCard('이번달 출고량','전월 대비',fmt(monthShip),`전월 ${fmt(prevShip)}건 / ${changeRate(monthShip, prevShip)}`,changeTone(monthShip, prevShip),thisMonth.slice(-7).map(r=>r.shipments))}
         ${metricCard('누락률','이번달 vs 전월',pct(sumMissing(thisMonth),monthShip),`전월 ${pct(sumMissing(prevMonth),prevShip)} / ${changeRate(monthMissingRate, prevMissingRate)}`,changeTone(monthMissingRate, prevMissingRate, true),thisMonth.slice(-7).map(r=>r.missing))}
         ${metricCard('오배송률','이번달 vs 전월',pct(sumMis(thisMonth),monthShip),`전월 ${pct(sumMis(prevMonth),prevShip)} / ${changeRate(monthMisRate, prevMisRate)}`,changeTone(monthMisRate, prevMisRate, true),thisMonth.slice(-7).map(r=>r.misdelivery))}
-        ${metricCard('선택기간 출고량','상단 기간 선택 기준',fmt(periodShip),`${document.getElementById('periodLabel').textContent} / 누락 ${fmt(periodMissing)}건(${pct(periodMissing, periodShip)}) · 오배송 ${fmt(periodMis)}건(${pct(periodMis, periodShip)})`,periodIssues > 0 ? 'warn' : 'good',periodShipping.slice(-7).map(r=>r.shipments))}
+        ${metricCard('선택기간 출고량','직전 동일 기간 대비',fmt(periodShip),`${periodLabelText} / 직전 ${previousPeriodLabel} ${fmt(previousPeriodShip)}건 / ${changeRate(periodShip, previousPeriodShip)} · 누락 ${fmt(periodMissing)}건(${pct(periodMissing, periodShip)}) · 오배송 ${fmt(periodMis)}건(${pct(periodMis, periodShip)})`,changeTone(periodShip, previousPeriodShip),periodShipping.slice(-7).map(r=>r.shipments))}
       `;
       const summaryCards = `
         ${viewToggle('shipping')}
-        ${metricCard('이번달 출고량','전월 대비',fmt(monthShip),`전월 ${fmt(prevShip)}건 / ${changeRate(monthShip, prevShip)}`,changeTone(monthShip, prevShip),thisMonth.slice(-7).map(r=>r.shipments))}
-        ${metricCard('누락률','이번달 vs 전월',pct(sumMissing(thisMonth),monthShip),`전월 ${pct(sumMissing(prevMonth),prevShip)} / ${changeRate(monthMissingRate, prevMissingRate)}`,changeTone(monthMissingRate, prevMissingRate, true),thisMonth.slice(-7).map(r=>r.missing))}
-        ${metricCard('오배송률','이번달 vs 전월',pct(sumMis(thisMonth),monthShip),`전월 ${pct(sumMis(prevMonth),prevShip)} / ${changeRate(monthMisRate, prevMisRate)}`,changeTone(monthMisRate, prevMisRate, true),thisMonth.slice(-7).map(r=>r.misdelivery))}
-        ${metricCard('선택기간 출고량','상단 기간 선택 기준',fmt(periodShip),`${document.getElementById('periodLabel').textContent} / 누락 ${fmt(periodMissing)}건(${pct(periodMissing, periodShip)}) · 오배송 ${fmt(periodMis)}건(${pct(periodMis, periodShip)})`,periodIssues > 0 ? 'warn' : 'good',periodShipping.slice(-7).map(r=>r.shipments))}
+        ${metricCard('선택기간 출고량','직전 동일 기간 대비',fmt(periodShip),`${periodLabelText} / 직전 ${previousPeriodLabel} ${fmt(previousPeriodShip)}건 / ${changeRate(periodShip, previousPeriodShip)}`,changeTone(periodShip, previousPeriodShip),periodShipping.slice(-7).map(r=>r.shipments))}
+        ${metricCard('선택기간 누락률','직전 동일 기간 대비',pct(periodMissing, periodShip),`직전 ${pct(previousPeriodMissing, previousPeriodShip)} / ${changeRate(periodMissingRate, previousPeriodMissingRate)}`,changeTone(periodMissingRate, previousPeriodMissingRate, true),periodShipping.slice(-7).map(r=>r.missing))}
+        ${metricCard('선택기간 오배송률','직전 동일 기간 대비',pct(periodMis, periodShip),`직전 ${pct(previousPeriodMis, previousPeriodShip)} / ${changeRate(periodMisRate, previousPeriodMisRate)}`,changeTone(periodMisRate, previousPeriodMisRate, true),periodShipping.slice(-7).map(r=>r.misdelivery))}
+        ${metricCard('선택기간 이슈','누락+오배송 직전 대비',`${fmt(periodIssues)}건`,`직전 ${fmt(previousPeriodIssues)}건 / ${changeRate(periodIssues, previousPeriodIssues)}`,changeTone(periodIssues, previousPeriodIssues, true),periodShipping.slice(-7).map(r=>r.missing+r.misdelivery))}
       `;
       if (state.viewMode.shipping === 'summary') {
         grid(`${summaryCards}
