@@ -116,7 +116,7 @@
     .period-compare-dot { display: inline-block; width: 10px; height: 10px; border-radius: 999px; margin-right: 6px; vertical-align: -1px; }
     .period-compare-dot.current { background: var(--cyan); }
     .period-compare-dot.previous { background: var(--yellow); }
-    .period-compare-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 88px; gap: 12px; align-items: center; }
+    .period-compare-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 190px; gap: 14px; align-items: center; }
     .period-compare-label { color: #dce5ff; font-size: 13px; font-weight: 800; }
     .period-compare-bars { display: grid; gap: 7px; min-width: 0; }
     .period-compare-track { height: 18px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
@@ -125,6 +125,10 @@
     .period-compare-bar.previous { background: linear-gradient(90deg, rgba(251,191,36,.48), rgba(251,191,36,.9)); }
     .period-compare-value { color: #eef3ff; font-size: 13px; font-weight: 900; text-align: right; }
     .period-compare-sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .period-compare-delta { font-size: 11px; margin-top: 4px; font-weight: 800; }
+    .period-compare-delta.good { color: var(--green); }
+    .period-compare-delta.warn { color: var(--yellow); }
+    .period-compare-delta.neutral { color: var(--muted); }
 
     .issue-list { display: grid; gap: 12px; position: relative; z-index: 1; }
     .issue { display: grid; grid-template-columns: 42px 1fr auto; gap: 12px; align-items: center; padding: 13px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
@@ -922,6 +926,17 @@
         if (item.type === 'rate') return v => `${Number(v || 0).toFixed(2)}%`;
         return v => `${fmt(v)}건`;
       };
+      const formatDelta = (item, current, previous) => {
+        const diff = current - previous;
+        const direction = diff > 0 ? '증가' : diff < 0 ? '감소' : '동일';
+        const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
+        const rate = changeRate(current, previous);
+        const deltaValue = item.type === 'rate'
+          ? `${sign}${Math.abs(diff).toFixed(2)}%p`
+          : `${sign}${fmt(Math.abs(Math.round(diff)))}건`;
+        const tone = diff === 0 ? 'neutral' : item.lowerIsBetter ? (diff > 0 ? 'warn' : 'good') : (diff > 0 ? 'good' : 'warn');
+        return { text: `직전 대비 ${deltaValue} / ${rate} ${direction}`, tone };
+      };
       return `
         <div class="period-compare">
           <div class="period-compare-legend">
@@ -935,6 +950,7 @@
             const currentWidth = current > 0 ? Math.max((current / localMax) * 100, 2) : 0;
             const previousWidth = previous > 0 ? Math.max((previous / localMax) * 100, 2) : 0;
             const display = formatValue(item);
+            const delta = formatDelta(item, current, previous);
             return `
               <div class="period-compare-row">
                 <div class="period-compare-label">${item.label}</div>
@@ -942,7 +958,7 @@
                   <div class="period-compare-track" title="${labels.current} ${display(current)}"><div class="period-compare-bar current" style="width:${currentWidth}%"></div></div>
                   <div class="period-compare-track" title="${labels.previous} ${display(previous)}"><div class="period-compare-bar previous" style="width:${previousWidth}%"></div></div>
                 </div>
-                <div class="period-compare-value">${display(current)}<div class="period-compare-sub">직전 ${display(previous)}</div></div>
+                <div class="period-compare-value">${display(current)}<div class="period-compare-sub">직전 ${display(previous)}</div><div class="period-compare-delta ${delta.tone}">${delta.text}</div></div>
               </div>
             `;
           }).join('')}
@@ -1139,9 +1155,9 @@
       const previousPeriodLabel = `${dateStr(previousPeriodRange.start)} ~ ${dateStr(previousPeriodRange.end)}`;
       const periodComparisonItems = [
         { label: '출고량', current: periodShip, previous: previousPeriodShip },
-        { label: '누락률', current: periodMissingRate * 100, previous: previousPeriodMissingRate * 100, type: 'rate' },
-        { label: '오배송률', current: periodMisRate * 100, previous: previousPeriodMisRate * 100, type: 'rate' },
-        { label: '이슈건수', current: periodIssues, previous: previousPeriodIssues }
+        { label: '누락률', current: periodMissingRate * 100, previous: previousPeriodMissingRate * 100, type: 'rate', lowerIsBetter: true },
+        { label: '오배송률', current: periodMisRate * 100, previous: previousPeriodMisRate * 100, type: 'rate', lowerIsBetter: true },
+        { label: '이슈건수', current: periodIssues, previous: previousPeriodIssues, lowerIsBetter: true }
       ];
       const monthShip = sumShip(thisMonth);
       const prevShip = sumShip(prevMonth);
@@ -1164,11 +1180,11 @@
       `;
       const summaryCards = `
         ${viewToggle('shipping')}
-        <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">출고량, 누락률, 오배송률, 이슈건수를 동일 길이 기간으로 비교</div></div><span class="badge">막대 비교</span></div>${renderPeriodComparisonChart(periodComparisonItems, { current: periodLabelText, previous: previousPeriodLabel })}</article>
         ${metricCard('선택기간 출고량','직전 동일 기간 대비',fmt(periodShip),`${periodLabelText} / 직전 ${previousPeriodLabel} ${fmt(previousPeriodShip)}건 / ${changeRate(periodShip, previousPeriodShip)}`,changeTone(periodShip, previousPeriodShip),periodShipping.slice(-7).map(r=>r.shipments))}
         ${metricCard('선택기간 누락률','직전 동일 기간 대비',pct(periodMissing, periodShip),`직전 ${pct(previousPeriodMissing, previousPeriodShip)} / ${changeRate(periodMissingRate, previousPeriodMissingRate)}`,changeTone(periodMissingRate, previousPeriodMissingRate, true),periodShipping.slice(-7).map(r=>r.missing))}
         ${metricCard('선택기간 오배송률','직전 동일 기간 대비',pct(periodMis, periodShip),`직전 ${pct(previousPeriodMis, previousPeriodShip)} / ${changeRate(periodMisRate, previousPeriodMisRate)}`,changeTone(periodMisRate, previousPeriodMisRate, true),periodShipping.slice(-7).map(r=>r.misdelivery))}
         ${metricCard('선택기간 이슈','누락+오배송 직전 대비',`${fmt(periodIssues)}건`,`직전 ${fmt(previousPeriodIssues)}건 / ${changeRate(periodIssues, previousPeriodIssues)}`,changeTone(periodIssues, previousPeriodIssues, true),periodShipping.slice(-7).map(r=>r.missing+r.misdelivery))}
+        <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">출고량, 누락률, 오배송률, 이슈건수를 동일 길이 기간으로 비교</div></div><span class="badge">가로 막대 비교</span></div>${renderPeriodComparisonChart(periodComparisonItems, { current: periodLabelText, previous: previousPeriodLabel })}</article>
       `;
       if (state.viewMode.shipping === 'summary') {
         grid(`${summaryCards}
