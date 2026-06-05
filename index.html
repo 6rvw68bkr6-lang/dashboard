@@ -111,6 +111,20 @@
     .simple-bar-issue { color: var(--yellow); font-size: 11px; font-weight: 800; margin-top: -4px; }
     .simple-bar-label { position: absolute; bottom: -46px; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; color: var(--muted); font-size: 12px; line-height: 1.35; }
     .simple-bar-value { color: #dce5ff; font-size: 12px; font-weight: 800; }
+    .period-compare { position: relative; z-index: 1; display: grid; gap: 16px; margin-top: 18px; }
+    .period-compare-legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+    .period-compare-dot { display: inline-block; width: 10px; height: 10px; border-radius: 999px; margin-right: 6px; vertical-align: -1px; }
+    .period-compare-dot.current { background: var(--cyan); }
+    .period-compare-dot.previous { background: var(--yellow); }
+    .period-compare-row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 88px; gap: 12px; align-items: center; }
+    .period-compare-label { color: #dce5ff; font-size: 13px; font-weight: 800; }
+    .period-compare-bars { display: grid; gap: 7px; min-width: 0; }
+    .period-compare-track { height: 18px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
+    .period-compare-bar { height: 100%; border-radius: inherit; }
+    .period-compare-bar.current { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+    .period-compare-bar.previous { background: linear-gradient(90deg, rgba(251,191,36,.48), rgba(251,191,36,.9)); }
+    .period-compare-value { color: #eef3ff; font-size: 13px; font-weight: 900; text-align: right; }
+    .period-compare-sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
 
     .issue-list { display: grid; gap: 12px; position: relative; z-index: 1; }
     .issue { display: grid; grid-template-columns: 42px 1fr auto; gap: 12px; align-items: center; padding: 13px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
@@ -643,7 +657,7 @@
       startDate.setHours(0,0,0,0);
       const endDate = new Date(end);
       endDate.setHours(23,59,59,999);
-      const days = Math.max(1, Math.round((endDate - startDate) / 86400000) + 1);
+      const days = Math.max(1, Math.floor((endOfDay(endDate) - startDate) / 86400000) + 1);
       const previousEnd = new Date(startDate);
       previousEnd.setDate(previousEnd.getDate() - 1);
       previousEnd.setHours(23,59,59,999);
@@ -902,6 +916,40 @@
       }).join('')}</div></div>`;
     }
 
+    function renderPeriodComparisonChart(items, labels) {
+      if (!items.length) return '<div class="empty">비교할 데이터가 없습니다.</div>';
+      const formatValue = item => {
+        if (item.type === 'rate') return v => `${Number(v || 0).toFixed(2)}%`;
+        return v => `${fmt(v)}건`;
+      };
+      return `
+        <div class="period-compare">
+          <div class="period-compare-legend">
+            <span><i class="period-compare-dot current"></i>${labels.current}</span>
+            <span><i class="period-compare-dot previous"></i>${labels.previous}</span>
+          </div>
+          ${items.map(item => {
+            const current = Number(item.current || 0);
+            const previous = Number(item.previous || 0);
+            const localMax = Math.max(current, previous, 1);
+            const currentWidth = current > 0 ? Math.max((current / localMax) * 100, 2) : 0;
+            const previousWidth = previous > 0 ? Math.max((previous / localMax) * 100, 2) : 0;
+            const display = formatValue(item);
+            return `
+              <div class="period-compare-row">
+                <div class="period-compare-label">${item.label}</div>
+                <div class="period-compare-bars">
+                  <div class="period-compare-track" title="${labels.current} ${display(current)}"><div class="period-compare-bar current" style="width:${currentWidth}%"></div></div>
+                  <div class="period-compare-track" title="${labels.previous} ${display(previous)}"><div class="period-compare-bar previous" style="width:${previousWidth}%"></div></div>
+                </div>
+                <div class="period-compare-value">${display(current)}<div class="period-compare-sub">직전 ${display(previous)}</div></div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
     function renderOverview() {
       const d = state.filteredShipping;
       const totalShip = d.reduce((s, r) => s + r.shipments, 0);
@@ -1089,6 +1137,12 @@
       const previousPeriodMisRate = previousPeriodShip ? previousPeriodMis / previousPeriodShip : 0;
       const periodLabelText = document.getElementById('periodLabel').textContent;
       const previousPeriodLabel = `${dateStr(previousPeriodRange.start)} ~ ${dateStr(previousPeriodRange.end)}`;
+      const periodComparisonItems = [
+        { label: '출고량', current: periodShip, previous: previousPeriodShip },
+        { label: '누락률', current: periodMissingRate * 100, previous: previousPeriodMissingRate * 100, type: 'rate' },
+        { label: '오배송률', current: periodMisRate * 100, previous: previousPeriodMisRate * 100, type: 'rate' },
+        { label: '이슈건수', current: periodIssues, previous: previousPeriodIssues }
+      ];
       const monthShip = sumShip(thisMonth);
       const prevShip = sumShip(prevMonth);
       const monthMissingRate = monthShip ? sumMissing(thisMonth) / monthShip : 0;
@@ -1117,6 +1171,7 @@
       `;
       if (state.viewMode.shipping === 'summary') {
         grid(`${summaryCards}
+          <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">출고량, 누락률, 오배송률, 이슈건수를 동일 길이 기간으로 비교</div></div><span class="badge">막대 비교</span></div>${renderPeriodComparisonChart(periodComparisonItems, { current: periodLabelText, previous: previousPeriodLabel })}</article>
           <article class="card half"><div class="card-head"><div><div class="card-title">월별 출고 비교</div><div class="card-sub">올해 월별 출고량 비교</div></div></div>${renderBarChart(groupShippingData(yearData(state.shipping, baseDate),'monthly'),'shipments','label',{hideZero:true})}</article>
           <article class="card half"><div class="card-head"><div><div class="card-title">택배 이슈 요약</div><div class="card-sub">선택 월 누락/오배송 발생일</div></div></div><div class="issue-list">${d.filter(r=>r.missing+r.misdelivery>0).slice(-6).map(r=>`<div class="issue"><div class="issue-icon">!</div><div><strong>${dateStr(r.date)}</strong><span>누락 ${fmt(r.missing)}건 / 오배송 ${fmt(r.misdelivery)}건</span></div><div class="issue-num">${fmt(r.missing+r.misdelivery)}</div></div>`).join('') || '<div class="empty">선택 월 내 택배 이슈가 없습니다.</div>'}</div></article>
         `);
