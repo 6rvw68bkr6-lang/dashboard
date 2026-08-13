@@ -130,6 +130,23 @@
     .period-compare-delta.warn { color: var(--yellow); }
     .period-compare-delta.neutral { color: var(--muted); }
 
+    .period-vertical { position: relative; z-index: 1; margin-top: 18px; }
+    .period-vertical-legend { display:flex; align-items:center; gap:16px; flex-wrap:wrap; color:var(--muted); font-size:12px; margin-bottom:18px; }
+    .period-vertical-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:22px; }
+    .period-vertical-facet { min-width:0; }
+    .period-vertical-title { text-align:center; color:#dce5ff; font-size:13px; font-weight:800; }
+    .period-vertical-delta { min-height:32px; margin:5px 0 10px; text-align:center; font-size:11px; font-weight:800; line-height:1.35; }
+    .period-vertical-delta.good { color:var(--green); }
+    .period-vertical-delta.warn { color:var(--yellow); }
+    .period-vertical-delta.neutral { color:var(--muted); }
+    .period-vertical-plot { height:230px; display:grid; grid-template-columns:repeat(2,minmax(46px,74px)); justify-content:center; align-items:end; gap:14px; border-bottom:1px solid var(--panel-line); background:repeating-linear-gradient(to top, rgba(255,255,255,.055) 0, rgba(255,255,255,.055) 1px, transparent 1px, transparent 25%); }
+    .period-vertical-column { height:100%; display:flex; flex-direction:column; justify-content:end; align-items:stretch; gap:7px; }
+    .period-vertical-value { text-align:center; color:#eef3ff; font-size:12px; font-weight:900; font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .period-vertical-bar { min-height:4px; border-radius:9px 9px 0 0; background:linear-gradient(180deg,var(--cyan),var(--blue)); }
+    .period-vertical-bar.previous { background:linear-gradient(180deg,rgba(251,191,36,.9),rgba(251,191,36,.48)); }
+    .period-vertical-axis { display:grid; grid-template-columns:repeat(2,minmax(46px,74px)); justify-content:center; gap:14px; margin-top:8px; color:var(--muted); font-size:11px; text-align:center; }
+    .period-vertical-context { color:var(--muted); font-size:11px; text-align:center; margin-top:7px; min-height:15px; }
+
     .issue-list { display: grid; gap: 12px; position: relative; z-index: 1; }
     .issue { display: grid; grid-template-columns: 42px 1fr auto; gap: 12px; align-items: center; padding: 13px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
     .issue-icon { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: rgba(91,124,250,.14); }
@@ -322,6 +339,12 @@
       .topbar { flex-direction: column; }
       .filters { justify-content: flex-start; }
     }
+    @media (max-width: 820px) {
+      .period-vertical-grid { grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:30px; }
+    }
+    @media (max-width: 520px) {
+      .period-vertical-grid { grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
@@ -388,7 +411,7 @@
       reorder: { name: '발주_필요', gid: '164754989' }
     };
 
-    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, coupang: { page: 1, pageSize: 30, basis: 'supply', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '', overviewDetail: '', poDetail: '', vendorFlowOpen: false }, inventory: { selectedProduct: '', selectedCategory: 'all', riskOpen: false, sortKey: 'qty', sortDir: 'desc', search: '' } };
+    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, production: { selectedProduct: 'all' }, coupang: { page: 1, pageSize: 30, basis: 'supply', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '', overviewDetail: '', poDetail: '', vendorFlowOpen: false }, inventory: { selectedProduct: '', selectedCategory: 'all', riskOpen: false, sortKey: 'qty', sortDir: 'desc', search: '' } };
 
     const titles = {
       overview: ['주간 운영 대시보드', '전체 운영 상황을 대표 보고용으로 요약합니다.'],
@@ -484,6 +507,14 @@
 
     function fmt(n) { return Number(n || 0).toLocaleString('ko-KR'); }
     function money(n) { return `${fmt(n)}원`; }
+    function safeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
     function usd(n) { return `$${fmt(Math.round(Number(n || 0)))}`; }
     function usdToKrw(n) { return Math.round(Number(n || 0) * 1500); }
     function pct(num, den) { return den ? `${((num / den) * 100).toFixed(2)}%` : '0.00%'; }
@@ -696,6 +727,11 @@
     function setViewMode(tab, mode) {
       state.viewMode[tab] = mode;
       renderCurrentTab();
+    }
+
+    function setProductionProduct(value) {
+      state.production.selectedProduct = value || 'all';
+      renderProduction();
     }
 
     function metricCard(title, sub, value, caption, tone = 'good', spark = []) {
@@ -966,6 +1002,61 @@
       `;
     }
 
+    function renderVerticalPeriodComparisonChart(items, labels) {
+      if (!items.length) return '<div class="empty">비교할 데이터가 없습니다.</div>';
+      const displayValue = (item, value) => item.type === 'rate'
+        ? `${Number(value || 0).toFixed(2)}%`
+        : `${fmt(value)}${item.unit || '건'}`;
+      const deltaInfo = (item, current, previous) => {
+        const diff = current - previous;
+        if (diff === 0) return { text: '동일 · 변화 없음', tone: 'neutral' };
+        const direction = diff > 0 ? '증가' : '감소';
+        const amount = item.type === 'rate'
+          ? `${Math.abs(diff).toFixed(2)}%p`
+          : `${fmt(Math.abs(Math.round(diff)))}${item.unit || '건'}`;
+        const rate = previous ? `${Math.abs((diff / previous) * 100).toFixed(1)}%` : '신규';
+        const tone = item.lowerIsBetter ? (diff > 0 ? 'warn' : 'good') : (diff > 0 ? 'good' : 'warn');
+        return { text: `${amount} ${direction} · ${rate}`, tone };
+      };
+      return `
+        <div class="period-vertical">
+          <div class="period-vertical-legend">
+            <span><i class="period-compare-dot current"></i>선택기간 · ${labels.current}</span>
+            <span><i class="period-compare-dot previous"></i>직전기간 · ${labels.previous}</span>
+          </div>
+          <div class="period-vertical-grid">
+            ${items.map(item => {
+              const current = Number(item.current || 0);
+              const previous = Number(item.previous || 0);
+              const localMax = Math.max(current, previous, 1);
+              const maxBarHeight = 180;
+              const currentHeight = current > 0 ? Math.max((current / localMax) * maxBarHeight, 4) : 0;
+              const previousHeight = previous > 0 ? Math.max((previous / localMax) * maxBarHeight, 4) : 0;
+              const delta = deltaInfo(item, current, previous);
+              return `
+                <div class="period-vertical-facet">
+                  <div class="period-vertical-title">${item.label}</div>
+                  <div class="period-vertical-delta ${delta.tone}">${delta.text}</div>
+                  <div class="period-vertical-plot">
+                    <div class="period-vertical-column">
+                      <div class="period-vertical-value">${displayValue(item, current)}</div>
+                      <div class="period-vertical-bar" style="height:${currentHeight}px" title="${labels.current} ${displayValue(item, current)}"></div>
+                    </div>
+                    <div class="period-vertical-column">
+                      <div class="period-vertical-value">${displayValue(item, previous)}</div>
+                      <div class="period-vertical-bar previous" style="height:${previousHeight}px" title="${labels.previous} ${displayValue(item, previous)}"></div>
+                    </div>
+                  </div>
+                  <div class="period-vertical-axis"><span>현재</span><span>직전</span></div>
+                  <div class="period-vertical-context">${item.context || ''}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
     function renderOverview() {
       const d = state.filteredShipping;
       const totalShip = d.reduce((s, r) => s + r.shipments, 0);
@@ -975,55 +1066,17 @@
       const avgBiz = d.filter(r => r.shipments > 0).length ? Math.round(totalShip / d.filter(r => r.shipments > 0).length) : 0;
       const maxDay = d.reduce((a, b) => b.shipments > a.shipments ? b : a, d[0] || { shipments: 0, dateText: '-' });
 
-      const productionRows = state.raw.production || [];
-      const productionObjectsAll = rowsToObjects(productionRows);
-      const productionHeaders = productionRows[0] || [];
-      const productionDateKey = productionHeaders.find(h => {
-        const text = String(h).replaceAll(' ', '').toLowerCase();
-        return text.includes('날짜') ||
-               text.includes('일자') ||
-               text.includes('제작일') ||
-               text.includes('생산일') ||
-               text.includes('작업일') ||
-               text.includes('등록일') ||
-               text.includes('date');
-      });
-
-      const isDateHeader = h => {
-        const text = String(h).replaceAll(' ', '').toLowerCase();
-        return text.includes('날짜') || text.includes('일자') || text.includes('date') || text.includes('제작일') || text.includes('생산일') || text.includes('작업일');
-      };
-
-      const productionQtyKey =
-        productionHeaders.find(h => !isDateHeader(h) && String(h).replaceAll(' ', '').includes('제작수량')) ||
-        productionHeaders.find(h => !isDateHeader(h) && String(h).replaceAll(' ', '').includes('생산수량')) ||
-        productionHeaders.find(h => !isDateHeader(h) && String(h).replaceAll(' ', '').includes('완성수량')) ||
-        productionHeaders.find(h => !isDateHeader(h) && String(h).replaceAll(' ', '').includes('완료수량')) ||
-        productionHeaders.find(h => !isDateHeader(h) && String(h).replaceAll(' ', '').includes('양품수량')) ||
-        productionHeaders.find(h => !isDateHeader(h) && String(h).replaceAll(' ', '').includes('수량'));
-
-      const productionDefectKey =
-        productionHeaders.find(h => String(h).replaceAll(' ', '').includes('불량수량')) ||
-        productionHeaders.find(h => String(h).replaceAll(' ', '').includes('폐기수량')) ||
-        productionHeaders.find(h => String(h).replaceAll(' ', '').includes('불량')) ||
-        productionHeaders.find(h => String(h).replaceAll(' ', '').includes('폐기'));
-      let productionObjects = filterObjectsByDate(productionObjectsAll, productionDateKey);
-
+      const productionAnalysis = getProductionAnalysis('period', 'all');
+      const productionObjects = productionAnalysis.objects;
+      const productionDateKey = productionAnalysis.dateKey;
+      const productionQtyKey = productionAnalysis.qtyKey;
+      const productionDefectKey = [productionAnalysis.defectKey, productionAnalysis.disposalKey].filter(Boolean).join(' + ');
       const productionDateParseSamples = productionDateKey
-        ? productionObjectsAll.slice(0, 5).map(o => o[productionDateKey]).filter(Boolean)
+        ? productionAnalysis.allObjects.slice(0, 5).map(o => o[productionDateKey]).filter(Boolean)
         : [];
-
-      const productionTotal = productionQtyKey
-        ? productionObjects.reduce((s, o) => s + toNum(o[productionQtyKey]), 0)
-        : productionObjects.length;
-
-      const productionDefect = productionDefectKey
-        ? productionObjects.reduce((s, o) => s + toNum(o[productionDefectKey]), 0)
-        : 0;
-
-      const productionRate = productionTotal
-        ? pct(productionDefect, productionTotal)
-        : '0.00%';
+      const productionTotal = productionAnalysis.totalQty;
+      const productionDefect = productionAnalysis.totalDefect;
+      const productionRate = productionAnalysis.defectRate;
 
       const paymentAnalysis = getPaymentAnalysis();
       const overviewPaymentModal = renderOverviewPaymentModal(paymentAnalysis);
@@ -1042,7 +1095,7 @@
         ${clickableMetricCard('결제 예정 금액','선택 기간 내 예정일 기준',money(paymentAnalysis.scheduledKrwInPeriod),`${fmt(paymentAnalysis.scheduledPaymentsInPeriod.length)}건 예정 / 클릭 시 상세`,'warn',[paymentAnalysis.scheduledKrwInPeriod],`openOverviewPaymentDetail('scheduled')`)}
         ${clickableMetricCard('실제 결제 금액','선택 기간 내 결제 완료 기준',money(paymentAnalysis.paidKrwInPeriod),`${fmt(paymentAnalysis.paidPaymentsInPeriod.length)}건 결제 / 클릭 시 상세`,'good',[paymentAnalysis.paidKrwInPeriod],`openOverviewPaymentDetail('paid')`)}
         ${metricCard('총 제작수량','제작_일별 기준',fmt(productionTotal),productionQtyKey ? `${productionQtyKey} 합계` : '행 개수 기준','good',[productionTotal])}
-        ${metricCard('불량 / 폐기','제작 품질 이슈',fmt(productionDefect),`불량률 ${productionRate}` ,productionDefect > 0 ? 'warn' : 'good',[productionDefect])}
+        ${metricCard('불량 / 폐기','제작 품질 이슈',fmt(productionDefect),`불량·폐기율 ${productionRate}` ,productionDefect > 0 ? 'warn' : 'good',[productionDefect])}
         ${metricCard('쿠팡 판매','수량 + 공급가액 합계',`${fmt(coupangTotal)}개`,`공급가액 ${money(coupangSupplyTotal)}`,'good',coupangAnalysis.dated.slice(-7).map(r=>r.qty))}
         <article class="card wide"><div class="card-head"><div><div class="card-title">일별 출고 흐름</div><div class="card-sub">선택 기간 전체 출고량 / 누락·오배송 발생일 표시</div></div><span class="badge">MAX ${fmt(maxDay.shipments)}</span></div>${renderBarChart(d,'shipments','date',{hideZero:true})}</article>
         <article class="card side"><div class="card-head"><div><div class="card-title">즉시 확인 필요</div><div class="card-sub">문제 발생 항목 요약</div></div><span class="badge ${issues > 0 ? 'warn' : ''}">${fmt(issues)}건</span></div><div class="issue-list">
@@ -1054,7 +1107,7 @@
         <article class="card half"><div class="card-head"><div><div class="card-title">제작 운영 현황</div><div class="card-sub">생산 / 불량 / 품질 기준</div></div></div><div class="issue-list">
           <div class="issue"><div class="issue-icon">🏭</div><div><strong>총 제작수량</strong><span>${productionQtyKey || '자동 감지'} 기준</span></div><div class="issue-num">${fmt(productionTotal)}</div></div>
           <div class="issue"><div class="issue-icon">⚠️</div><div><strong>불량 / 폐기</strong><span>${productionDefectKey || '감지 안됨'}</span></div><div class="issue-num">${fmt(productionDefect)}</div></div>
-          <div class="issue"><div class="issue-icon">%</div><div><strong>불량률</strong><span>불량 ÷ 제작수량</span></div><div class="issue-num">${productionRate}</div></div>
+          <div class="issue"><div class="issue-icon">%</div><div><strong>불량·폐기율</strong><span>(불량 + 폐기) ÷ 제작수량</span></div><div class="issue-num">${productionRate}</div></div>
           <div class="issue"><div class="issue-icon">📅</div><div><strong>기간 적용</strong><span>${productionDateKey || '날짜열 감지 안됨'}</span></div><div class="issue-num">${productionObjects.length}</div></div>
           <div class="issue"><div class="issue-icon">🔎</div><div><strong>감지 컬럼</strong><span>수량: ${productionQtyKey || '없음'} / 샘플: ${productionDateParseSamples[0] || '-'}</span></div><div class="issue-num">확인</div></div>
         </div></article>
@@ -1812,23 +1865,71 @@
       }).sort((x,y)=>toDate(x[a.dateKey])-toDate(y[a.dateKey]));
     }
 
-    function getProductionAnalysis(scope = 'period') {
+    function normalizeProductionRows(rows) {
+      const rawHeaders = rows[0] || [];
+      const dateLabels = ['날짜','일자','제작일','생산일','작업일','등록일','date'];
+      const blockStarts = rawHeaders.reduce((starts, header, index) => {
+        const normalized = String(header || '').replaceAll(' ', '').toLowerCase();
+        if (dateLabels.includes(normalized)) starts.push(index);
+        return starts;
+      }, []);
+
+      // 일반적인 세로형 표는 기존 방식으로 읽고, 같은 헤더가 가로로 반복될 때만
+      // 각 블록을 독립적인 행 데이터로 변환한다.
+      if (blockStarts.length <= 1) {
+        return {
+          headers: rawHeaders.filter(h => String(h || '').trim()),
+          objects: rowsToObjects(rows),
+          blockCount: rawHeaders.length ? 1 : 0
+        };
+      }
+
+      const headers = [];
+      const objects = [];
+      blockStarts.forEach((start, blockIndex) => {
+        const nextStart = blockStarts[blockIndex + 1] ?? rawHeaders.length;
+        let end = nextStart;
+        while (end > start && !String(rawHeaders[end - 1] || '').trim()) end--;
+        const blockHeaders = rawHeaders.slice(start, end).map(h => String(h || '').trim());
+        blockHeaders.forEach(h => { if (h && !headers.includes(h)) headers.push(h); });
+
+        rows.slice(1).forEach(row => {
+          const object = {};
+          let hasData = false;
+          blockHeaders.forEach((header, offset) => {
+            if (!header) return;
+            const value = row[start + offset] ?? '';
+            object[header] = value;
+            if (String(value).trim()) hasData = true;
+          });
+          const hasIdentity = dateLabels.some(label => String(object[headers.find(h => String(h).replaceAll(' ', '').toLowerCase() === label)] || '').trim()) ||
+            String(object['품목'] || object['제품명'] || object['상품명'] || '').trim();
+          if (hasData && hasIdentity) objects.push(object);
+        });
+      });
+
+      return { headers, objects, blockCount: blockStarts.length };
+    }
+
+    function getProductionAnalysis(scope = 'period', productFilter = state.production.selectedProduct || 'all') {
       const rows = state.raw.production || [];
-      const headers = rows[0] || [];
-      const allObjects = rowsToObjects(rows);
+      const normalized = normalizeProductionRows(rows);
+      const headers = normalized.headers;
+      const allObjects = normalized.objects;
 
       const dateKey = findHeader(headers, ['날짜','일자','제작일','생산일','작업일','등록일','date']);
       const productKey = findHeader(headers, ['상품명','제품명','품목명','품목','모델','옵션','sku','SKU','제품']);
       const workerKey = findHeader(headers, ['작업자','담당자','생산자','작업인원','직원']);
       const qtyKey = findHeader(headers, ['제작수량','생산수량','완성수량','완료수량','양품수량','수량']);
       const goodKey = findHeader(headers, ['양품수량','정상수량','완료수량','양품']);
-      const defectKey = findHeader(headers, ['불량수량','폐기수량','불량','폐기','NG']);
+      const defectKey = findHeader(headers, ['불량수량','불량량','NG수량','불량','NG'], ['폐기','사유','율']);
+      const disposalKey = findHeader(headers, ['폐기수량','폐기량','폐기개수','폐기'], ['사유','율']);
       const reasonKey = findHeader(headers, ['불량사유','폐기사유','원인','이슈','비고','메모']);
       const targetKey = findHeader(headers, ['목표수량','목표','계획수량','계획']);
 
       const latestProductionDate = todayDate();
 
-      const objects = dateKey
+      const scopedObjects = dateKey
         ? (scope === 'year'
             ? allObjects.filter(o => {
                 const d = toDate(o[dateKey]);
@@ -1849,6 +1950,17 @@
               : filterObjectsByDate(allObjects, dateKey))
         : allObjects;
 
+      const availableProducts = productKey
+        ? [...new Set(allObjects.map(o => String(o[productKey] || '').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'ko'))
+        : [];
+      if (productFilter !== 'all' && !availableProducts.includes(productFilter)) {
+        productFilter = 'all';
+      }
+      const selectedProduct = productFilter || 'all';
+      const objects = selectedProduct === 'all' || !productKey
+        ? scopedObjects
+        : scopedObjects.filter(o => String(o[productKey] || '').trim() === selectedProduct);
+
       function rowQty(o) {
         if (qtyKey) return toNum(o[qtyKey]);
         if (goodKey || defectKey) return toNum(o[goodKey]) + toNum(o[defectKey]);
@@ -1861,7 +1973,7 @@
       }
 
       function rowDefect(o) {
-        return defectKey ? toNum(o[defectKey]) : 0;
+        return (defectKey ? toNum(o[defectKey]) : 0) + (disposalKey ? toNum(o[disposalKey]) : 0);
       }
 
       function rowTarget(o) {
@@ -1875,8 +1987,13 @@
       const goodRate = totalQty ? pct(totalGood, totalQty) : '0.00%';
       const defectRate = totalQty ? pct(totalDefect, totalQty) : '0.00%';
       const defectRateNumber = totalQty ? (totalDefect / totalQty) * 100 : 0;
-      const defectGoalPassed = defectRateNumber < 5;
-      const defectGoalLabel = defectGoalPassed ? '목표 달성' : '관리 필요';
+      const defectGoalRates = targetKey
+        ? objects.map(o => String(o[targetKey] || '').match(/(\d+(?:\.\d+)?)\s*%/)).filter(Boolean).map(match => Number(match[1]))
+        : [];
+      const defectGoalRate = defectGoalRates.length ? defectGoalRates[0] : null;
+      const defectGoalText = defectGoalRate == null ? '목표 미설정' : `${defectGoalRate}% 미만`;
+      const defectGoalPassed = defectGoalRate == null ? null : defectRateNumber < defectGoalRate;
+      const defectGoalLabel = defectGoalPassed == null ? '목표 미설정' : (defectGoalPassed ? '목표 달성' : '관리 필요');
       const targetRate = defectGoalLabel;
 
       const dailyMap = {};
@@ -1934,8 +2051,12 @@
         qtyKey,
         goodKey,
         defectKey,
+        disposalKey,
         reasonKey,
         targetKey,
+        blockCount: normalized.blockCount,
+        availableProducts,
+        selectedProduct,
         totalQty,
         totalGood,
         totalDefect,
@@ -1944,6 +2065,8 @@
         defectRate,
         targetRate,
         defectRateNumber,
+        defectGoalRate,
+        defectGoalText,
         defectGoalPassed,
         defectGoalLabel,
         daily,
@@ -2603,33 +2726,39 @@
       const productionPeriodLabel = document.getElementById('periodLabel').textContent;
       const productionPreviousPeriodLabel = `${dateStr(productionPreviousPeriodRange.start)} ~ ${dateStr(productionPreviousPeriodRange.end)}`;
       const productionComparisonItems = [
-        { label: '제작수량', current: periodA.totalQty, previous: previousPeriodA.totalQty },
-        { label: '양품률', current: periodGoodRateNumber * 100, previous: previousPeriodGoodRateNumber * 100, type: 'rate' },
-        { label: '불량률', current: periodDefectRateNumber * 100, previous: previousPeriodDefectRateNumber * 100, type: 'rate', lowerIsBetter: true },
-        { label: '불량/폐기', current: periodA.totalDefect, previous: previousPeriodA.totalDefect, lowerIsBetter: true }
+        { label: '제작수량', current: periodA.totalQty, previous: previousPeriodA.totalQty, unit: '개', context: '맥세이프 + 프레임' },
+        { label: '양품률', current: periodGoodRateNumber * 100, previous: previousPeriodGoodRateNumber * 100, type: 'rate', context: '양품 ÷ 생산수량' },
+        { label: '불량·폐기율', current: periodDefectRateNumber * 100, previous: previousPeriodDefectRateNumber * 100, type: 'rate', lowerIsBetter: true, context: '낮을수록 양호' },
+        { label: '불량 / 폐기', current: periodA.totalDefect, previous: previousPeriodA.totalDefect, unit: '개', lowerIsBetter: true, context: '발생 수량' }
       ];
-      const previewRows = a.objects.slice(0, 30).map(o => `<tr>${previewHeaders.map(h => `<td>${o[h] || '-'}</td>`).join('')}</tr>`).join('');
+      const productionScopeLabel = a.selectedProduct === 'all' ? '전체 제품군' : a.selectedProduct;
+      const productOptions = a.availableProducts.map(product => `<option value="${safeHtml(product)}" ${a.selectedProduct === product ? 'selected' : ''}>${safeHtml(product)}</option>`).join('');
+      const productionFilter = `<article class="card full" style="min-height:auto;padding:14px 18px;"><div class="table-tools" style="margin:0;"><div class="tool-left"><strong style="font-size:13px;">제품군</strong><select onchange="setProductionProduct(this.value)"><option value="all" ${a.selectedProduct === 'all' ? 'selected' : ''}>전체 제품군</option>${productOptions}</select><div class="pill">가로형 제작표 ${fmt(a.blockCount)}개를 통합 집계</div></div></div></article>`;
+      const previewRows = a.objects.slice(0, 30).map(o => `<tr>${previewHeaders.map(h => `<td>${safeHtml(o[h] || '-')}</td>`).join('')}</tr>`).join('');
 
       const commonCards = `
         ${viewToggle('production')}
-        ${metricCard('올해 누적 제작수량','제작_일별 YTD 기준',fmt(a.totalQty),`${latestProdDate.getFullYear()}년 전체 / 이번달 ${fmt(monthQty)}개 / 불량률 ${a.defectRate}`,'good',a.daily.map(r=>r.qty))}
-        ${metricCard('올해 누적 불량 / 폐기','YTD 품질 이슈',fmt(a.totalDefect),`올해 불량률 ${a.defectRate} / 목표 5% 미만`,a.totalDefect > 0 ? 'warn' : 'good',a.daily.map(r=>r.defect))}
+        ${productionFilter}
+        ${metricCard('올해 누적 제작수량',`${productionScopeLabel} · 제작_일별 YTD`,fmt(a.totalQty),`${latestProdDate.getFullYear()}년 전체 / 이번달 ${fmt(monthQty)}개 / 불량·폐기율 ${a.defectRate}`,'good',a.daily.map(r=>r.qty))}
+        ${metricCard('올해 누적 불량 / 폐기','YTD 품질 이슈',fmt(a.totalDefect),`올해 불량·폐기율 ${a.defectRate} / 목표 ${a.defectGoalText}`,a.totalDefect > 0 ? 'warn' : 'good',a.daily.map(r=>r.defect))}
         ${metricCard('이번달 제작수량','전월 대비',fmt(monthQty),`전월 ${fmt(prevMonthQty)}개 / ${changeRate(monthQty, prevMonthQty)}`,changeTone(monthQty, prevMonthQty),thisMonthProd.map(r=>r.qty))}
-        ${metricCard('이번달 불량률','전월 대비',pct(monthDefect, monthQty),`전월 ${pct(prevMonthDefect, prevMonthQty)} / ${changeRate(monthDefectRate, prevMonthDefectRate)}`,changeTone(monthDefectRate, prevMonthDefectRate, true),thisMonthProd.map(r=>r.defect))}
-        ${metricCard('선택기간 제작수량','상단 기간 선택 기준',fmt(periodA.totalQty),`${document.getElementById('periodLabel').textContent} / 불량률 ${periodDefectRate}`,periodA.totalDefect > 0 ? 'warn' : 'good',periodA.daily.map(r=>r.qty))}
+        ${metricCard('이번달 불량·폐기율','전월 대비',pct(monthDefect, monthQty),`전월 ${pct(prevMonthDefect, prevMonthQty)} / ${changeRate(monthDefectRate, prevMonthDefectRate)}`,changeTone(monthDefectRate, prevMonthDefectRate, true),thisMonthProd.map(r=>r.defect))}
+        ${metricCard('선택기간 제작수량','상단 기간 선택 기준',fmt(periodA.totalQty),`${document.getElementById('periodLabel').textContent} / 불량·폐기율 ${periodDefectRate}`,periodA.totalDefect > 0 ? 'warn' : 'good',periodA.daily.map(r=>r.qty))}
       `;
       const summaryCards = `
         ${viewToggle('production')}
+        ${productionFilter}
         ${metricCard('선택기간 제작수량','직전 동일 기간 대비',fmt(periodA.totalQty),`${productionPeriodLabel} / 직전 ${productionPreviousPeriodLabel} ${fmt(previousPeriodA.totalQty)}개 / ${changeRate(periodA.totalQty, previousPeriodA.totalQty)}`,changeTone(periodA.totalQty, previousPeriodA.totalQty),periodA.daily.map(r=>r.qty))}
         ${metricCard('선택기간 양품률','직전 동일 기간 대비',pct(periodA.totalGood, periodA.totalQty),`직전 ${pct(previousPeriodA.totalGood, previousPeriodA.totalQty)} / ${changeRate(periodGoodRateNumber, previousPeriodGoodRateNumber)}`,changeTone(periodGoodRateNumber, previousPeriodGoodRateNumber),periodA.daily.map(r=>r.good))}
-        ${metricCard('선택기간 불량률','직전 동일 기간 대비',pct(periodA.totalDefect, periodA.totalQty),`직전 ${pct(previousPeriodA.totalDefect, previousPeriodA.totalQty)} / ${changeRate(periodDefectRateNumber, previousPeriodDefectRateNumber)}`,changeTone(periodDefectRateNumber, previousPeriodDefectRateNumber, true),periodA.daily.map(r=>r.defect))}
+        ${metricCard('선택기간 불량·폐기율','직전 동일 기간 대비',pct(periodA.totalDefect, periodA.totalQty),`직전 ${pct(previousPeriodA.totalDefect, previousPeriodA.totalQty)} / ${changeRate(periodDefectRateNumber, previousPeriodDefectRateNumber)}`,changeTone(periodDefectRateNumber, previousPeriodDefectRateNumber, true),periodA.daily.map(r=>r.defect))}
         ${metricCard('선택기간 불량/폐기','직전 동일 기간 대비',`${fmt(periodA.totalDefect)}개`,`직전 ${fmt(previousPeriodA.totalDefect)}개 / ${changeRate(periodA.totalDefect, previousPeriodA.totalDefect)}`,changeTone(periodA.totalDefect, previousPeriodA.totalDefect, true),periodA.daily.map(r=>r.defect))}
-        <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">제작수량, 양품률, 불량률, 불량/폐기를 동일 길이 기간으로 비교</div></div><span class="badge">가로 막대 비교</span></div>${renderPeriodComparisonChart(productionComparisonItems, { current: productionPeriodLabel, previous: productionPreviousPeriodLabel })}</article>
+        <article class="card full"><div class="card-head"><div><div class="card-title">선택기간 vs 직전기간 비교</div><div class="card-sub">제작수량, 양품률, 불량·폐기율, 불량/폐기를 동일 길이 기간으로 비교</div></div><span class="badge">세로 막대 비교</span></div>${renderVerticalPeriodComparisonChart(productionComparisonItems, { current: productionPeriodLabel, previous: productionPreviousPeriodLabel })}</article>
       `;
       if (state.viewMode.production === 'summary') {
         grid(`${summaryCards}
           <article class="card half"><div class="card-head"><div><div class="card-title">올해 일별 제작 흐름</div><div class="card-sub">기간 필터 제외 / 올해 제작 데이터 전체</div></div><span class="badge">${a.dateKey || '날짜열 없음'}</span></div>${a.daily.length ? `${renderBarChart(a.daily, 'qty', 'label')}` : '<div class="empty">일별 차트로 표시할 데이터가 없습니다.</div>'}</article>
-          <article class="card half"><div class="card-head"><div><div class="card-title">제작 이슈 요약</div><div class="card-sub">불량률 5% 미만 기준</div></div><span class="badge ${a.totalDefect > 0 ? 'warn' : ''}">${a.defectGoalLabel}</span></div><div class="issue-list"><div class="issue"><div class="issue-icon">✅</div><div><strong>양품률</strong><span>양품 ÷ 총 제작</span></div><div class="issue-num">${a.goodRate}</div></div><div class="issue"><div class="issue-icon">⚠️</div><div><strong>불량률</strong><span>불량 ÷ 제작수량</span></div><div class="issue-num">${a.defectRate}</div></div><div class="issue"><div class="issue-icon">🎯</div><div><strong>품질 목표 상태</strong><span>목표 기준: 5% 미만 유지</span></div><div class="issue-num">${a.defectGoalLabel}</div></div></div></article>
+          <article class="card half"><div class="card-head"><div><div class="card-title">제작 이슈 요약</div><div class="card-sub">불량수량 + 폐기수량 / ${a.defectGoalText} 기준</div></div><span class="badge ${a.defectGoalPassed === false ? 'warn' : ''}">${a.defectGoalLabel}</span></div><div class="issue-list"><div class="issue"><div class="issue-icon">✅</div><div><strong>양품률</strong><span>(생산수량 - 불량 - 폐기) ÷ 생산수량</span></div><div class="issue-num">${a.goodRate}</div></div><div class="issue"><div class="issue-icon">⚠️</div><div><strong>불량·폐기율</strong><span>(불량 + 폐기) ÷ 생산수량</span></div><div class="issue-num">${a.defectRate}</div></div><div class="issue"><div class="issue-icon">🎯</div><div><strong>품질 목표 상태</strong><span>목표 기준: ${a.defectGoalText}</span></div><div class="issue-num">${a.defectGoalLabel}</div></div></div></article>
+          <article class="card full"><div class="card-head"><div><div class="card-title">제품군별 제작량</div><div class="card-sub">맥세이프 케이스와 프레임 케이스 통합 데이터 기준</div></div><span class="badge">${productionScopeLabel}</span></div>${renderProductionRank(a.productRank, '개', 8)}</article>
         `);
         return;
       }
@@ -2638,9 +2767,9 @@
 
         <article class="card side"><div class="card-head"><div><div class="card-title">제작 이슈 요약</div><div class="card-sub">불량/폐기 중심 확인</div></div><span class="badge ${a.totalDefect > 0 ? 'warn' : ''}">${fmt(a.totalDefect)}건</span></div><div class="issue-list">
           <div class="issue"><div class="issue-icon">🏭</div><div><strong>제작 데이터</strong><span>선택 기간 내 행 수</span></div><div class="issue-num">${fmt(a.objects.length)}</div></div>
-          <div class="issue"><div class="issue-icon">✅</div><div><strong>양품률</strong><span>양품 ÷ 총 제작</span></div><div class="issue-num">${a.goodRate}</div></div>
-          <div class="issue"><div class="issue-icon">⚠️</div><div><strong>불량률 목표</strong><span>목표 기준: 5% 미만 유지</span></div><div class="issue-num">${a.defectRate}</div></div>
-          <div class="issue"><div class="issue-icon">🎯</div><div><strong>품질 목표 상태</strong><span>불량률 5% 미만 기준</span></div><div class="issue-num">${a.defectGoalLabel}</div></div>
+          <div class="issue"><div class="issue-icon">✅</div><div><strong>양품률</strong><span>(생산수량 - 불량 - 폐기) ÷ 생산수량</span></div><div class="issue-num">${a.goodRate}</div></div>
+          <div class="issue"><div class="issue-icon">⚠️</div><div><strong>불량·폐기율</strong><span>(불량 + 폐기) ÷ 생산수량</span></div><div class="issue-num">${a.defectRate}</div></div>
+          <div class="issue"><div class="issue-icon">🎯</div><div><strong>품질 목표 상태</strong><span>${a.defectGoalText} 기준</span></div><div class="issue-num">${a.defectGoalLabel}</div></div>
         </div></article>
 
         <article class="card half"><div class="card-head"><div><div class="card-title">품목별 제작량 TOP</div><div class="card-sub">제작수량 큰 순서</div></div></div>${renderProductionRank(a.productRank, '개', 8)}</article>
@@ -2649,8 +2778,9 @@
         <article class="card half"><div class="card-head"><div><div class="card-title">감지된 제작 컬럼</div><div class="card-sub">시트 구조 확인용</div></div></div><div class="issue-list">
           <div class="issue"><div class="issue-icon">📅</div><div><strong>날짜</strong><span>${a.dateKey || '없음'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">#</div><div><strong>제작수량</strong><span>${a.qtyKey || '없음'}</span></div><div></div></div>
-          <div class="issue"><div class="issue-icon">✅</div><div><strong>양품</strong><span>${a.goodKey || '없음'}</span></div><div></div></div>
+          <div class="issue"><div class="issue-icon">✅</div><div><strong>양품</strong><span>${a.goodKey || '생산수량 - 불량 - 폐기'}</span></div><div></div></div>
           <div class="issue"><div class="issue-icon">⚠️</div><div><strong>불량</strong><span>${a.defectKey || '없음'}</span></div><div></div></div>
+          <div class="issue"><div class="issue-icon">🗑️</div><div><strong>폐기</strong><span>${a.disposalKey || '없음'}</span></div><div></div></div>
         </div></article>
 
         <article class="card full"><div class="card-head"><div><div class="card-title">제작 원본 데이터</div><div class="card-sub">선택 기간 기준 상위 30행</div></div></div><div class="table-wrap"><table><thead><tr>${previewHeaders.map(h=>`<th>${h || '-'}</th>`).join('')}</tr></thead><tbody>${previewRows}</tbody></table></div></article>
