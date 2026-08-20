@@ -211,6 +211,34 @@
     .period-vertical-axis { display:grid; grid-template-columns:repeat(2,minmax(46px,74px)); justify-content:center; gap:14px; margin-top:8px; color:var(--muted); font-size:11px; text-align:center; }
     .period-vertical-context { color:var(--muted); font-size:11px; text-align:center; margin-top:7px; min-height:15px; }
 
+    /* ── 요약 KPI: 현재값과 기간 비교를 분리 ── */
+    .summary-kpi-card { min-height:182px; display:flex; flex-direction:column; }
+    .summary-kpi-value { position:relative; z-index:1; color:var(--text); font-size:clamp(34px,3vw,46px); line-height:1; font-weight:950; letter-spacing:-.06em; margin:16px 0 12px; font-variant-numeric:tabular-nums; }
+    .summary-kpi-value small { color:var(--text2); font-size:17px; font-weight:850; letter-spacing:-.03em; margin-left:6px; }
+    .summary-kpi-caption { position:relative; z-index:1; color:var(--muted); font-size:12px; line-height:1.5; margin-top:auto; }
+    .volume-compare-card { min-height:356px; }
+    .volume-compare-layout { position:relative; z-index:1; display:grid; grid-template-columns:minmax(300px,.9fr) minmax(380px,1.1fr); gap:30px; align-items:stretch; }
+    .volume-compare-overview { min-width:0; display:flex; flex-direction:column; justify-content:center; padding:6px 0; }
+    .volume-compare-values { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; color:var(--muted); }
+    .volume-compare-values strong { color:var(--text); font-size:clamp(42px,4.3vw,62px); line-height:1; font-weight:950; letter-spacing:-.07em; font-variant-numeric:tabular-nums; }
+    .volume-compare-values b { color:var(--yellow); font-size:clamp(25px,2.6vw,36px); line-height:1; font-weight:900; letter-spacing:-.05em; font-variant-numeric:tabular-nums; }
+    .volume-compare-values small { color:var(--text2); font-size:14px; font-weight:800; }
+    .volume-compare-overview .shipping-delta { margin-top:14px; }
+    .volume-compare-periods { display:grid; gap:9px; margin-top:20px; }
+    .volume-compare-period { display:grid; grid-template-columns:70px minmax(0,1fr); gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--ov08); border-radius:13px; background:var(--ov035); }
+    .volume-compare-period span { color:var(--muted); font-size:11px; font-weight:800; }
+    .volume-compare-period strong { color:var(--text2); font-size:12px; line-height:1.45; font-variant-numeric:tabular-nums; }
+    .volume-compare-period small { grid-column:2; color:var(--muted); font-size:10px; margin-top:-6px; }
+    .volume-compare-chart-wrap { min-width:0; border:1px solid var(--ov08); border-radius:18px; background:var(--ov025); padding:18px 20px 14px; }
+    .volume-compare-chart { height:230px; display:grid; grid-template-columns:repeat(2,minmax(92px,132px)); justify-content:center; align-items:end; gap:38px; border-bottom:1px solid var(--panel-line); background:repeating-linear-gradient(to top,var(--ov055) 0,var(--ov055) 1px,transparent 1px,transparent 25%); }
+    .volume-compare-column { height:100%; display:flex; flex-direction:column; justify-content:end; align-items:stretch; gap:8px; min-width:0; }
+    .volume-compare-value { color:var(--text); text-align:center; font-size:14px; font-weight:950; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .volume-compare-bar { min-height:4px; border-radius:12px 12px 0 0; background:linear-gradient(180deg,var(--cyan),var(--blue)); box-shadow:0 10px 28px rgba(34,211,238,.14); }
+    .volume-compare-bar.previous { background:linear-gradient(180deg,rgba(251,191,36,.92),rgba(251,191,36,.46)); box-shadow:0 10px 28px rgba(251,191,36,.12); }
+    .volume-compare-axis { display:grid; grid-template-columns:repeat(2,minmax(92px,132px)); justify-content:center; gap:38px; margin-top:10px; text-align:center; }
+    .volume-compare-axis strong { display:block; color:var(--text2); font-size:12px; }
+    .volume-compare-axis span { display:block; color:var(--muted); font-size:10px; margin-top:3px; }
+
     /* ── 택배 요약: 입력 상태를 반영한 기간 비교 ── */
     .shipping-hero { min-height: 330px; }
     .shipping-hero-grid { position:relative; z-index:1; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(250px,.85fr); gap:18px; }
@@ -229,6 +257,9 @@
     .shipping-match-values { display:flex; align-items:baseline; gap:9px; margin:22px 0 10px; color:var(--muted); font-size:14px; }
     .shipping-match-values strong { color:var(--text); font-size:34px; letter-spacing:-.05em; }
     .shipping-match-values b { color:var(--yellow); font-size:20px; }
+    .shipping-match-result { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:16px; }
+    .shipping-match-result .shipping-match-values { margin:0; }
+    .shipping-match-result .shipping-delta { margin-bottom:3px; }
     .shipping-delta { display:inline-flex; width:max-content; max-width:100%; border-radius:999px; padding:7px 10px; font-size:12px; font-weight:900; }
     .shipping-delta.good { color:var(--green); background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.22); }
     .shipping-delta.warn { color:var(--yellow); background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.22); }
@@ -275,6 +306,88 @@
     .production-day-issue { min-height:14px; color:var(--yellow); font-size:9px; font-weight:800; text-align:center; margin-top:5px; }
     .production-category-note { color:var(--muted); font-size:11px; line-height:1.5; margin-top:10px; }
 
+    /* ── 생산 입고·검수: 관리번호로 연결된 로트 진행 현황 ── */
+    .inspection-lot-list { position:relative; z-index:1; display:grid; gap:12px; }
+    .inspection-lot { padding:16px; border:1px solid var(--ov08); border-radius:18px; background:var(--ov035); min-width:0; }
+    .inspection-lot-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .inspection-lot-name { min-width:0; }
+    .inspection-lot-name strong { display:block; color:var(--text); font-size:15px; line-height:1.35; word-break:break-word; }
+    .inspection-lot-name span { display:block; color:var(--muted); font-size:11px; margin-top:4px; line-height:1.45; }
+    .inspection-lot-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:12px; }
+    .inspection-lot-stat { padding:10px; border-radius:13px; background:var(--ov04); border:1px solid var(--ov06); min-width:0; }
+    .inspection-lot-stat span { display:block; color:var(--muted); font-size:10px; margin-bottom:4px; }
+    .inspection-lot-stat strong { display:block; color:var(--text2); font-size:15px; white-space:nowrap; }
+    .inspection-lot-progress { height:9px; border-radius:999px; background:var(--ov08); overflow:hidden; }
+    .inspection-lot-progress div { height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--blue),var(--cyan)); }
+    .inspection-lot-foot { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; color:var(--muted); font-size:10px; margin-top:9px; line-height:1.45; }
+    .inspection-source-note { position:relative; z-index:1; padding:12px 14px; border-radius:14px; background:rgba(34,211,238,.055); border:1px solid rgba(34,211,238,.15); color:var(--muted); font-size:11px; line-height:1.55; }
+
+    /* 생산 입고·검수: 다중 로트 선택 */
+    .inspection-filter-toolbar { overflow:visible; z-index:80; }
+    .inspection-lot-filter { position:relative; z-index:40; }
+    .inspection-lot-trigger { display:inline-flex; align-items:center; justify-content:space-between; gap:12px; min-width:230px; background:var(--ov05); border-color:var(--panel-line); }
+    .inspection-lot-trigger strong { color:var(--text); font-size:13px; }
+    .inspection-lot-trigger span { color:var(--muted); font-size:11px; }
+    .inspection-lot-trigger-arrow { color:var(--muted); font-size:10px; transition:transform .18s ease; }
+    .inspection-lot-trigger[aria-expanded="true"] .inspection-lot-trigger-arrow { transform:rotate(180deg); }
+    .inspection-lot-panel { position:absolute; top:calc(100% + 9px); left:0; width:min(420px,calc(100vw - 36px)); padding:12px; border:1px solid var(--panel-line); border-radius:18px; background:var(--panel); box-shadow:0 24px 70px rgba(0,0,0,.42); z-index:220; }
+    .inspection-lot-panel-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+    .inspection-lot-panel-head strong { color:var(--text); font-size:13px; }
+    .inspection-lot-actions { display:flex; gap:6px; }
+    .inspection-lot-actions button { padding:7px 10px; font-size:11px; background:var(--ov05); }
+    .inspection-lot-checks { display:grid; gap:6px; max-height:300px; overflow-y:auto; padding-right:3px; }
+    .inspection-lot-checks::-webkit-scrollbar { width:7px; }
+    .inspection-lot-checks::-webkit-scrollbar-thumb { background:var(--ov12); border-radius:999px; }
+    .inspection-lot-check { display:grid; grid-template-columns:20px minmax(0,1fr) auto; gap:10px; align-items:center; min-width:0; padding:10px 11px; border:1px solid var(--ov07); border-radius:13px; background:var(--ov035); cursor:pointer; }
+    .inspection-lot-check:hover { border-color:rgba(34,211,238,.3); background:rgba(34,211,238,.055); }
+    .inspection-lot-check input { width:16px; height:16px; margin:0; accent-color:var(--cyan); }
+    .inspection-lot-check-copy { min-width:0; }
+    .inspection-lot-check-copy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text2); font-size:12px; }
+    .inspection-lot-check-copy span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:10px; margin-top:3px; }
+    .inspection-lot-check-qty { color:var(--text2); font-size:11px; white-space:nowrap; }
+    .inspection-lot-selection-note { color:var(--muted); font-size:10px; line-height:1.45; margin-top:9px; }
+
+    /* 생산 입고·검수: 의미가 보이는 대형 세로 막대 KPI */
+    .inspection-kpi-card { min-height:380px; display:flex; flex-direction:column; }
+    .inspection-kpi-card .card-head { margin-bottom:10px; }
+    .inspection-kpi-card .kpi-value { font-size:38px; margin:8px 0 5px; }
+    .inspection-kpi-card .kpi-caption { min-height:36px; line-height:1.45; }
+    .inspection-chart-head { position:relative; z-index:1; display:flex; justify-content:space-between; gap:10px; align-items:center; margin-top:15px; color:var(--muted); font-size:10px; }
+    .inspection-chart-key { display:inline-flex; align-items:center; gap:6px; min-width:0; }
+    .inspection-chart-key::before { content:""; width:8px; height:8px; border-radius:999px; background:var(--inspection-tone,var(--cyan)); flex:0 0 auto; }
+    .inspection-chart-scale { white-space:nowrap; }
+    .inspection-lot-chart { --lot-gap:10px; --lot-label-height:38px; position:relative; z-index:1; display:flex; align-items:stretch; gap:var(--lot-gap); height:236px; margin-top:7px; padding:0 3px; }
+    .inspection-lot-chart::before { content:""; position:absolute; inset:0 0 var(--lot-label-height); border-bottom:1px solid var(--panel-line); background:repeating-linear-gradient(to top,var(--ov055) 0,var(--ov055) 1px,transparent 1px,transparent 25%); pointer-events:none; }
+    .inspection-lot-chart-col { position:relative; z-index:1; flex:1 1 0; min-width:0; display:grid; grid-template-rows:minmax(0,1fr) var(--lot-label-height); }
+    .inspection-lot-chart-stack { min-width:0; min-height:0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; }
+    .inspection-lot-chart-value { width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; color:var(--text2); font-size:10px; font-weight:800; margin-bottom:6px; font-variant-numeric:tabular-nums; }
+    .inspection-lot-chart-bar { width:clamp(3px,calc(100% - 4px),54px); height:var(--bar-height,0%); flex:0 0 auto; border-radius:8px 8px 0 0; background:linear-gradient(180deg,var(--inspection-tone,var(--cyan)),var(--blue)); opacity:.92; }
+    .inspection-lot-chart-bar.has-value { min-height:4px; }
+    .inspection-lot-chart-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-top:9px; text-align:center; color:var(--muted); font-size:9px; line-height:1.25; }
+    .inspection-lot-chart.labels-full { --lot-label-height:58px; }
+    .inspection-lot-chart.labels-full .inspection-lot-chart-label { display:-webkit-box; overflow:hidden; text-overflow:clip; white-space:normal; word-break:break-all; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; padding:9px 3px 0; font-size:10px; line-height:1.35; }
+    .inspection-kpi-card.tone-inbound { --inspection-tone:var(--cyan); }
+    .inspection-kpi-card.tone-complete { --inspection-tone:var(--green); }
+    .inspection-kpi-card.tone-remaining { --inspection-tone:var(--yellow); }
+    .inspection-kpi-card.tone-defect { --inspection-tone:var(--red); }
+    .inspection-kpi-card.tone-complete .inspection-lot-chart-bar { background:linear-gradient(180deg,var(--green),rgba(52,211,153,.48)); }
+    .inspection-kpi-card.tone-remaining .inspection-lot-chart-bar { background:linear-gradient(180deg,var(--yellow),rgba(251,191,36,.48)); }
+    .inspection-kpi-card.tone-defect .inspection-lot-chart-bar { background:linear-gradient(180deg,var(--red),rgba(220,38,38,.58)); box-shadow:0 8px 20px rgba(220,38,38,.18); }
+    .inspection-chart-empty { position:relative; z-index:1; min-height:218px; display:grid; place-items:center; text-align:center; color:var(--muted); font-size:12px; }
+    .inspection-kpi-card.is-clickable { cursor:pointer; transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
+    .inspection-kpi-card.is-clickable:hover { transform:translateY(-2px); border-color:rgba(251,113,133,.42); box-shadow:0 22px 64px rgba(220,38,38,.16); }
+    .inspection-kpi-card.is-clickable:focus-visible { outline:2px solid var(--red); outline-offset:3px; }
+    .inspection-kpi-card.is-clickable .inspection-chart-scale { color:var(--red); font-weight:900; }
+    .inspection-detail-card.is-collapsed .card-head { margin-bottom:0; }
+    .inspection-detail-actions { display:flex; align-items:center; gap:8px; }
+    .inspection-detail-toggle { display:inline-flex; align-items:center; gap:7px; padding:7px 11px; background:var(--ov05); border-color:var(--panel-line); }
+    .inspection-detail-toggle-arrow { display:inline-block; font-size:10px; transition:transform .18s ease; }
+    .inspection-detail-toggle[aria-expanded="true"] .inspection-detail-toggle-arrow { transform:rotate(180deg); }
+    .inspection-defect-backdrop { z-index:500; }
+    .inspection-defect-modal { width:min(880px,100%); }
+    .inspection-defect-summary { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+    .inspection-defect-note { color:var(--muted); font-size:11px; line-height:1.55; padding:11px 13px; border-radius:13px; background:rgba(251,113,133,.055); border:1px solid rgba(251,113,133,.16); margin-top:14px; }
+
     .issue-list { display: grid; gap: 12px; position: relative; z-index: 1; }
     .issue { display: grid; grid-template-columns: 42px 1fr auto; gap: 12px; align-items: center; padding: 13px; border-radius: 16px; background: var(--ov04); border: 1px solid var(--ov06); }
     .issue-icon { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: rgba(91,124,250,.14); }
@@ -316,6 +429,28 @@
     .rank-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--cyan)); }
     .rank-value { text-align: right; font-size: 13px; color: var(--text2); font-weight: 700; }
     .rank-qty { text-align: right; font-size: 13px; color: var(--yellow); font-weight: 800; }
+    .category-donut { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(150px, .85fr) minmax(0, 1.15fr); gap: 20px; align-items: center; min-height: 278px; }
+    .category-donut-visual { display: grid; place-items: center; min-width: 0; }
+    .category-donut-ring { width: min(178px, 100%); aspect-ratio: 1; border-radius: 50%; position: relative; display: grid; place-items: center; box-shadow: 0 18px 42px rgba(0,0,0,.24); }
+    .category-donut-ring::after { content: ""; position: absolute; inset: 28px; border-radius: 50%; background: var(--panel); border: 1px solid var(--panel-line); box-shadow: inset 0 0 20px rgba(0,0,0,.14); }
+    .category-donut-center { position: relative; z-index: 1; display: grid; gap: 3px; text-align: center; }
+    .category-donut-center span { color: var(--muted); font-size: 10px; font-weight: 800; }
+    .category-donut-center strong { color: var(--text); font-size: 23px; line-height: 1; letter-spacing: -.03em; }
+    .category-donut-center small { color: var(--text2); font-size: 10px; font-weight: 800; }
+    .category-donut-legend { display: grid; gap: 9px; min-width: 0; }
+    .category-donut-row { display: grid; grid-template-columns: 10px minmax(0,1fr) auto; gap: 8px; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--ov06); }
+    .category-donut-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .category-donut-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 12px currentColor; }
+    .category-donut-name { color: var(--text2); font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .category-donut-stat { text-align: right; white-space: nowrap; }
+    .category-donut-stat strong { display: block; color: var(--text); font-size: 12px; }
+    .category-donut-stat span { display: block; color: var(--muted); font-size: 9px; margin-top: 2px; }
+    .category-card-head { align-items:flex-start; flex-wrap:wrap; }
+    .category-card-actions { display:flex; align-items:center; justify-content:flex-end; gap:7px; flex-wrap:wrap; }
+    .category-metric-toggle { display:inline-flex; align-items:center; gap:3px; padding:3px; border:1px solid var(--panel-line); border-radius:999px; background:var(--ov04); }
+    .category-metric-toggle button { padding:6px 10px; border:0; border-radius:999px; background:transparent; color:var(--muted); font-size:11px; line-height:1; box-shadow:none; }
+    .category-metric-toggle button:hover { color:var(--text2); background:var(--ov06); }
+    .category-metric-toggle button.active { color:var(--text); background:linear-gradient(135deg,rgba(91,124,250,.5),rgba(34,211,238,.26)); box-shadow:inset 0 0 0 1px rgba(34,211,238,.18); }
     .flow-wrap { position: relative; z-index: 1; margin-top: 20px; }
     .flow-grid {
       position: absolute;
@@ -461,6 +596,7 @@
 
     @media (max-width: 1450px) {
       .title h1 { letter-spacing: -0.065em; }
+      .inspection-kpi-card { grid-column:span 6; }
     }
     @media (max-width: 1250px) {
       .title h1 { letter-spacing: -0.09em; }
@@ -475,13 +611,26 @@
       .filters { justify-content: flex-start; }
       .dashboard-actions { justify-content: flex-start; }
       .shipping-hero-grid { grid-template-columns:1fr; }
+      .volume-compare-layout { grid-template-columns:1fr; }
+      .summary-kpi-card { grid-column:span 6; }
     }
     @media (max-width: 820px) {
       .period-vertical-grid { grid-template-columns:repeat(2,minmax(0,1fr)); row-gap:30px; }
       .shipping-status-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .inspection-lot-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
     @media (max-width: 520px) {
       .period-vertical-grid { grid-template-columns:1fr; }
+      .category-donut { grid-template-columns:1fr; }
+      .category-donut-ring { width:156px; }
+      .inspection-lot-trigger { width:100%; min-width:0; }
+      .inspection-lot-panel { width:calc(100vw - 36px); }
+      .inspection-kpi-card { min-height:370px; }
+      .inspection-lot-chart { height:228px; }
+      .summary-kpi-card { grid-column:span 12; }
+      .volume-compare-chart { grid-template-columns:repeat(2,minmax(76px,110px)); gap:22px; }
+      .volume-compare-axis { grid-template-columns:repeat(2,minmax(76px,110px)); gap:22px; }
+      .volume-compare-period { grid-template-columns:62px minmax(0,1fr); }
     }
 
     /* ── 발주관리 (Purchase Order) tab ── */
@@ -591,6 +740,8 @@
       inventoryStock: { name: '재고관리_재고', gid: null },
       inventoryOut: { name: '재고관리_출고', gid: null },
       production: { name: '제작_일별', gid: '428106612' },
+      productionInbound: { name: '생산입고', gid: '323858150' },
+      inspectionDefects: { name: '검수불량', gid: '780283971' },
       coupang: { name: '쿠팡_판매', gid: '2007402832' },
       reorder: { name: '발주_필요', gid: '164754989' }
     };
@@ -598,12 +749,13 @@
     // 주말 외 회사 휴무일. 필요 시 날짜만 추가하면 택배 집계에서 자동 제외됩니다.
     const SHIPPING_CLOSED_DATES = new Set(['2026-08-14', '2026-08-17']);
 
-    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, production: { selectedProduct: 'all' }, coupang: { page: 1, pageSize: 30, basis: 'supply', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '', overviewDetail: '', poDetail: '', vendorFlowOpen: false }, inventory: { selectedProduct: '', selectedCategory: 'all', riskOpen: false, sortKey: 'qty', sortDir: 'desc', search: '' } };
+    const state = { tab: 'overview', loaded: false, raw: {}, shipping: [], filteredShipping: [], generic: {}, viewMode: { shipping: 'summary', production: 'summary', coupang: 'summary' }, production: { selectedProduct: 'all' }, inspection: { selectedLots: null, lotFilterOpen: false, defectDetailOpen: false, detailExpanded: false }, coupang: { page: 1, pageSize: 30, basis: 'supply', categoryMetric: 'qty', date: '', flowMode: 'daily', selectedMonthDetail: '' }, shippingView: { mode: 'daily', month: '' }, payment: { vendorPeriod: 'monthly', selectedVendor: 'all', startMonth: '', endMonth: '', selectedFlowPeriod: '', overviewDetail: '', poDetail: '', vendorFlowOpen: false }, inventory: { selectedProduct: '', selectedCategory: 'all', riskOpen: false, sortKey: 'qty', sortDir: 'desc', search: '' } };
 
     const titles = {
       overview: ['주간 운영 대시보드', '전체 운영 상황을 대표 보고용으로 요약합니다.'],
       shipping: ['택배 / 출고 현황', '일별 출고량, 누락, 오배송, 문제율을 확인합니다.'],
       production: ['제작 현황', '제작 일별 데이터를 기준으로 생산/불량/진행 상태를 확인합니다.'],
+      inspection: ['생산 입고 / 검수 현황', '생산입고 로트와 검수불량 내역을 관리번호로 연결해 검수 진행률과 불량 사유를 확인합니다.'],
       payment: ['결제 관리', '결제 예정 및 완료, PO 관련 금액 흐름을 확인합니다.'],
       inbound: ['입고 예정', '입고 예정 건과 지연 가능 항목을 확인합니다.'],
       inboundManage: ['입고 관리', '실제 입고 처리, 검수, 수량 차이, 상태를 관리합니다.'],
@@ -1007,8 +1159,8 @@
         });
       }
 
-      const completedPairs = pairs.filter(pair => pair.currentStatus === 'complete' && pair.previousStatus === 'complete');
       const completedCurrent = pairs.filter(pair => pair.currentStatus === 'complete');
+      const completedPrevious = pairs.filter(pair => pair.previousStatus === 'complete');
       const pendingCount = pairs.filter(pair => pair.currentStatus === 'pending').length;
       const closedCount = pairs.filter(pair => pair.currentStatus === 'closed').length;
       const futureCount = pairs.filter(pair => pair.currentStatus === 'future').length;
@@ -1017,8 +1169,9 @@
 
       return {
         pairs,
-        completedPairs,
+        days,
         completedCount: completedCurrent.length,
+        previousCompletedCount: completedPrevious.length,
         pendingCount,
         closedCount,
         futureCount,
@@ -1026,27 +1179,67 @@
         currentShip: sumKey(completedCurrent, 'current', 'shipments'),
         currentMissing: sumKey(completedCurrent, 'current', 'missing'),
         currentMis: sumKey(completedCurrent, 'current', 'misdelivery'),
-        matchedCurrentShip: sumKey(completedPairs, 'current', 'shipments'),
-        matchedPreviousShip: sumKey(completedPairs, 'previous', 'shipments'),
-        matchedCurrentMissing: sumKey(completedPairs, 'current', 'missing'),
-        matchedPreviousMissing: sumKey(completedPairs, 'previous', 'missing'),
-        matchedCurrentMis: sumKey(completedPairs, 'current', 'misdelivery'),
-        matchedPreviousMis: sumKey(completedPairs, 'previous', 'misdelivery')
+        previousShip: sumKey(completedPrevious, 'previous', 'shipments'),
+        previousMissing: sumKey(completedPrevious, 'previous', 'missing'),
+        previousMis: sumKey(completedPrevious, 'previous', 'misdelivery')
       };
     }
 
-    function renderShippingStatusSummary(comparison, periodLabelText) {
+    function renderSummaryKpiCard({ title, sub, value, unit = '', caption = '', tone = 'good', badge = '선택기간' }) {
+      const cls = tone === 'danger' ? 'danger' : tone === 'warn' ? 'warn' : '';
+      return `
+        <article class="card kpi summary-kpi-card">
+          <div class="card-head"><div><div class="card-title">${title}</div><div class="card-sub">${sub}</div></div><span class="badge ${cls}">${badge}</span></div>
+          <div class="summary-kpi-value">${value}${unit ? `<small>${unit}</small>` : ''}</div>
+          <div class="summary-kpi-caption">${caption}</div>
+        </article>`;
+    }
+
+    function renderVolumeComparisonCard({ title, subtitle, current, previous, unit, labels, currentMeta = '', previousMeta = '', badge = '세로 막대', badgeTone = '', statusItems = [] }) {
+      const currentValue = Number(current || 0);
+      const previousValue = Number(previous || 0);
+      const max = Math.max(currentValue, previousValue, 1);
+      const maxBarHeight = 182;
+      const currentHeight = currentValue > 0 ? Math.max((currentValue / max) * maxBarHeight, 4) : 0;
+      const previousHeight = previousValue > 0 ? Math.max((previousValue / max) * maxBarHeight, 4) : 0;
+      const delta = currentValue - previousValue;
+      const deltaTone = delta > 0 ? 'good' : delta < 0 ? 'warn' : 'neutral';
+      const deltaText = delta === 0
+        ? '직전 대비 변화 없음'
+        : `직전 대비 ${delta > 0 ? '+' : '-'}${fmt(Math.abs(delta))}${unit} · ${changeRate(currentValue, previousValue)}`;
+      const statusHtml = statusItems.length ? `<div class="shipping-status-grid">${statusItems.map(item => `
+        <div class="shipping-status ${item.tone || ''}"><span>${item.label}</span><strong>${item.value}</strong></div>`).join('')}</div>` : '';
+
+      return `
+        <article class="card full volume-compare-card">
+          <div class="card-head"><div><div class="card-title">${title}</div><div class="card-sub">${subtitle}</div></div><span class="badge ${badgeTone}">${badge}</span></div>
+          <div class="volume-compare-layout">
+            <section class="volume-compare-overview">
+              <div class="volume-compare-values"><strong>${fmt(currentValue)}</strong><span>vs</span><b>${fmt(previousValue)}</b><small>${unit}</small></div>
+              <div class="shipping-delta ${deltaTone}">${deltaText}</div>
+              <div class="volume-compare-periods">
+                <div class="volume-compare-period"><span>선택기간</span><strong>${labels.current}</strong>${currentMeta ? `<small>${currentMeta}</small>` : ''}</div>
+                <div class="volume-compare-period"><span>직전기간</span><strong>${labels.previous}</strong>${previousMeta ? `<small>${previousMeta}</small>` : ''}</div>
+              </div>
+            </section>
+            <section class="volume-compare-chart-wrap" aria-label="${title} 세로 막대 비교">
+              <div class="volume-compare-chart">
+                <div class="volume-compare-column"><div class="volume-compare-value">${fmt(currentValue)}${unit}</div><div class="volume-compare-bar" style="height:${currentHeight}px"></div></div>
+                <div class="volume-compare-column"><div class="volume-compare-value">${fmt(previousValue)}${unit}</div><div class="volume-compare-bar previous" style="height:${previousHeight}px"></div></div>
+              </div>
+              <div class="volume-compare-axis"><div><strong>선택기간</strong><span>${labels.current}</span></div><div><strong>직전기간</strong><span>${labels.previous}</span></div></div>
+            </section>
+          </div>
+          ${statusHtml}
+        </article>`;
+    }
+
+    function renderShippingStatusSummary(comparison, periodLabelText, previousPeriodLabel) {
       const hasPending = comparison.pendingCount > 0 || comparison.futureCount > 0;
       const progress = comparison.requiredDays ? Math.min((comparison.completedCount / comparison.requiredDays) * 100, 100) : 100;
-      const matchedDays = comparison.completedPairs.length;
-      const delta = comparison.matchedCurrentShip - comparison.matchedPreviousShip;
+      const delta = comparison.currentShip - comparison.previousShip;
       const deltaTone = delta > 0 ? 'good' : delta < 0 ? 'warn' : 'neutral';
-      const deltaText = matchedDays
-        ? `${delta > 0 ? '+' : delta < 0 ? '-' : ''}${fmt(Math.abs(delta))}건 · ${changeRate(comparison.matchedCurrentShip, comparison.matchedPreviousShip)}`
-        : '직전 비교 데이터 확인 필요';
-      const compareCaption = matchedDays
-        ? `입력 완료된 ${matchedDays}개 영업일만 같은 순서의 직전 영업일과 비교`
-        : '양쪽 모두 입력 완료된 날짜가 생기면 자동 비교됩니다.';
+      const deltaText = `${delta > 0 ? '+' : delta < 0 ? '-' : ''}${fmt(Math.abs(delta))}건 · ${changeRate(comparison.currentShip, comparison.previousShip)}`;
 
       return `
         <article class="card wide shipping-hero">
@@ -1062,11 +1255,13 @@
               </div>
             </section>
             <section class="shipping-match">
-              <div class="shipping-match-title">동일 입력일 비교</div>
-              <div class="shipping-match-sub">완료된 날짜 수를 맞춘 공정한 비교</div>
-              <div class="shipping-match-values"><strong>${fmt(comparison.matchedCurrentShip)}</strong><span>vs</span><b>${fmt(comparison.matchedPreviousShip)}</b><span>건</span></div>
-              <div class="shipping-delta ${deltaTone}">${deltaText}</div>
-              <div class="shipping-match-sub" style="margin-top:10px;">${compareCaption}</div>
+              <div class="shipping-match-title">직전기간 출고량 비교</div>
+              <div class="shipping-match-sub">동일한 ${comparison.days}일 길이의 기간 비교</div>
+              <div class="shipping-match-result">
+                <div class="shipping-match-values"><strong>${fmt(comparison.currentShip)}</strong><span>vs</span><b>${fmt(comparison.previousShip)}</b><span>건</span></div>
+                <div class="shipping-delta ${deltaTone}">${deltaText}</div>
+              </div>
+              <div class="shipping-match-sub" style="margin-top:10px;">직전 ${previousPeriodLabel} · 출고 입력일 ${comparison.previousCompletedCount}일</div>
             </section>
           </div>
           <div class="shipping-status-grid">
@@ -1080,26 +1275,33 @@
 
     function renderShippingQualitySummary(comparison) {
       const currentIssues = comparison.currentMissing + comparison.currentMis;
-      const previousIssues = comparison.matchedPreviousMissing + comparison.matchedPreviousMis;
+      const previousIssues = comparison.previousMissing + comparison.previousMis;
+      const qualityTone = (now, before) => now === before ? 'neutral' : now < before ? 'good' : 'warn';
+      const currentMissingRate = comparison.currentShip ? comparison.currentMissing / comparison.currentShip : 0;
+      const previousMissingRate = comparison.previousShip ? comparison.previousMissing / comparison.previousShip : 0;
+      const currentMisRate = comparison.currentShip ? comparison.currentMis / comparison.currentShip : 0;
+      const previousMisRate = comparison.previousShip ? comparison.previousMis / comparison.previousShip : 0;
+      const currentIssueRate = comparison.currentShip ? currentIssues / comparison.currentShip : 0;
+      const previousIssueRate = comparison.previousShip ? previousIssues / comparison.previousShip : 0;
       const qualityRows = [
-        { label:'누락률', current:pct(comparison.currentMissing, comparison.currentShip), previous:pct(comparison.matchedPreviousMissing, comparison.matchedPreviousShip) },
-        { label:'오배송률', current:pct(comparison.currentMis, comparison.currentShip), previous:pct(comparison.matchedPreviousMis, comparison.matchedPreviousShip) },
-        { label:'이슈 건수', current:`${fmt(currentIssues)}건`, previous:`${fmt(previousIssues)}건` }
+        { label:'누락률', current:`${fmt(comparison.currentMissing)}건 · ${pct(comparison.currentMissing, comparison.currentShip)}`, previous:`${fmt(comparison.previousMissing)}건 · ${pct(comparison.previousMissing, comparison.previousShip)}`, delta:changeRate(currentMissingRate, previousMissingRate), tone:qualityTone(currentMissingRate, previousMissingRate) },
+        { label:'오배송률', current:`${fmt(comparison.currentMis)}건 · ${pct(comparison.currentMis, comparison.currentShip)}`, previous:`${fmt(comparison.previousMis)}건 · ${pct(comparison.previousMis, comparison.previousShip)}`, delta:changeRate(currentMisRate, previousMisRate), tone:qualityTone(currentMisRate, previousMisRate) },
+        { label:'전체 이슈', current:`${fmt(currentIssues)}건 · ${pct(currentIssues, comparison.currentShip)}`, previous:`${fmt(previousIssues)}건 · ${pct(previousIssues, comparison.previousShip)}`, delta:changeRate(currentIssueRate, previousIssueRate), tone:qualityTone(currentIssueRate, previousIssueRate) }
       ];
       return `
         <article class="card side">
-          <div class="card-head"><div><div class="card-title">출고 품질 요약</div><div class="card-sub">입력 완료일 기준 누락·오배송</div></div><span class="badge">품질</span></div>
+          <div class="card-head"><div><div class="card-title">출고 품질 요약</div><div class="card-sub">선택기간과 직전 동일 길이 기간 비교</div></div><span class="badge">품질</span></div>
           <div class="shipping-quality-list">${qualityRows.map(row => `
             <div class="shipping-quality-row">
               <div class="shipping-quality-top"><span>${row.label}</span><strong>${row.current}</strong></div>
-              <div class="shipping-quality-sub"><span>동일 입력일 직전값</span><b>${row.previous}</b></div>
+              <div class="shipping-quality-sub"><span>직전 ${row.previous}</span><b class="${row.tone}">${row.delta}</b></div>
             </div>`).join('')}
           </div>
-          <div class="shipping-quality-note">미입력일은 품질률의 분모·분자에서도 제외됩니다. 휴무일과 주말은 운영일로 계산하지 않습니다.</div>
+          <div class="shipping-quality-note">제작 현황과 동일하게 선택기간과 직전 동일 길이 기간의 합계를 비교합니다. 미입력일은 0건으로 간주하지 않으며, 휴무일과 주말은 운영일에서 제외합니다.</div>
         </article>`;
     }
 
-    function renderShippingDailyComparison(comparison) {
+    function renderShippingDailyComparison(comparison, labels) {
       const values = comparison.pairs.flatMap(pair => [
         pair.currentStatus === 'complete' ? Number(pair.current?.shipments || 0) : 0,
         pair.previousStatus === 'complete' ? Number(pair.previous?.shipments || 0) : 0
@@ -1110,11 +1312,11 @@
 
       return `
         <article class="card full">
-          <div class="card-head"><div><div class="card-title">영업일별 출고 비교</div><div class="card-sub">파랑은 선택기간, 노랑은 직전 동일 위치 날짜 · 미입력/휴무는 별도 상태로 표시</div></div><span class="badge">세로 막대</span></div>
+          <div class="card-head"><div><div class="card-title">일별 출고량 비교</div><div class="card-sub">선택기간과 직전 동일 길이 기간의 출고량을 날짜 순서대로 비교</div></div><span class="badge">세로 막대</span></div>
           <div class="period-vertical-legend">
-            <span><i class="period-compare-dot current"></i>선택기간</span>
-            <span><i class="period-compare-dot previous"></i>직전기간</span>
-            <span>주말·회사 휴무 제외 / 미입력은 0건 처리 안 함</span>
+            <span><i class="period-compare-dot current"></i>선택기간 · ${labels.current}</span>
+            <span><i class="period-compare-dot previous"></i>직전기간 · ${labels.previous}</span>
+            <span>데이터가 없는 날은 미입력·휴무로 구분</span>
           </div>
           <div class="shipping-day-scroll"><div class="shipping-day-grid" style="grid-template-columns:repeat(${comparison.pairs.length},minmax(118px,1fr));min-width:max(100%,${chartMinWidth}px);">
             ${comparison.pairs.map(pair => {
@@ -1127,7 +1329,7 @@
                 : `<div class="shipping-day-placeholder ${pair.currentStatus}">${statusLabel[pair.currentStatus]}</div>`;
               const previousVisual = pair.previousStatus === 'complete'
                 ? `<span class="shipping-day-value">${fmt(previousValue)}</span><div class="shipping-day-bar previous" style="height:${previousHeight}%"></div>`
-                : `<div class="shipping-day-placeholder">${statusLabel[pair.previousStatus]}</div>`;
+                : `<div class="shipping-day-placeholder ${pair.previousStatus}">${statusLabel[pair.previousStatus]}</div>`;
               return `<div class="shipping-day-group">
                 <div class="shipping-day-head"><strong>${shippingShortDate(pair.currentDate)}</strong><span>${shippingDayName(pair.currentDate)}요일</span></div>
                 <div class="shipping-day-plot"><div class="shipping-day-col">${currentVisual}</div><div class="shipping-day-col">${previousVisual}</div></div>
@@ -1150,7 +1352,7 @@
 
     function viewToggle(tab) {
       const current = state.viewMode[tab] || 'summary';
-      return `<article class="card full" style="min-height:auto;padding:14px 18px;"><div class="table-tools" style="margin:0;"><div class="tool-left"><button onclick="setViewMode('${tab}','summary')" class="${current === 'summary' ? 'active-mode' : ''}">요약 비교</button><button onclick="setViewMode('${tab}','detail')" class="${current === 'detail' ? 'active-mode' : ''}">상세 분석</button><div class="pill">요약은 대표 보고용, 상세는 실무 확인용</div></div></div></article>`;
+      return `<article class="card full" style="min-height:auto;padding:14px 18px;"><div class="table-tools" style="margin:0;"><div class="tool-left"><button onclick="setViewMode('${tab}','summary')" class="${current === 'summary' ? 'active-mode' : ''}">요약 비교</button><button onclick="setViewMode('${tab}','detail')" class="${current === 'detail' ? 'active-mode' : ''}">상세 분석</button></div></div></article>`;
     }
 
     function setViewMode(tab, mode) {
@@ -1510,7 +1712,7 @@
       const paymentAnalysis = getPaymentAnalysis();
       const overviewPaymentModal = renderOverviewPaymentModal(paymentAnalysis);
       const coupangRows = state.raw.coupang || [];
-      const coupangAnalysis = getCoupangAnalysis('period');
+      const coupangAnalysis = getCoupangAnalysis('period', { ignoreDate: true });
       const coupangTotal = coupangAnalysis.totalQty;
       const coupangSupplyTotal = coupangAnalysis.totalSupply;
       const coupangMainKey = coupangAnalysis.qtyKey;
@@ -1548,11 +1750,6 @@
         </div></article>
         <article class="card half"><div class="card-head"><div><div class="card-title">운영 섹션 연결 상태</div><div class="card-sub">구글시트 탭 기준 데이터 연결</div></div></div><div class="progress-block">${renderProgressHtml()}</div></article>
         ${overviewPaymentModal}
-        <article class="card full"><div class="card-head"><div><div class="card-title">대표 보고용 핵심 문장</div><div class="card-sub">현재 데이터 기준 자동 생성</div></div></div><div class="issue-list">
-          <div class="issue"><div class="issue-icon">1</div><div><strong>선택 기간 출고는 총 ${fmt(totalShip)}건입니다.</strong><span>출고일 기준 평균은 ${fmt(avgBiz)}건입니다.</span></div><div></div></div>
-          <div class="issue"><div class="issue-icon">2</div><div><strong>문제 건수는 총 ${fmt(issues)}건입니다.</strong><span>누락 ${fmt(missing)}건, 오배송 ${fmt(mis)}건, 문제율 ${pct(issues,totalShip)}입니다.</span></div><div></div></div>
-          <div class="issue"><div class="issue-icon">3</div><div><strong>선택 기간 쿠팡 판매수량은 ${fmt(coupangTotal)}개, 공급가액 합계는 ${money(coupangSupplyTotal)}입니다.</strong><span>종합현황에서는 상단 기간 선택 기준으로 계산됩니다.</span></div><div></div></div>
-        </div></article>
       `);
     }
 
@@ -1614,6 +1811,7 @@
       const totalShip = sumShip(ytdShipping);
       const missing = sumMissing(ytdShipping);
       const mis = sumMis(ytdShipping);
+      const ytdIssues = missing + mis;
       const selectedShip = sumShip(d);
       const selectedMissing = sumMissing(d);
       const selectedMis = sumMis(d);
@@ -1635,6 +1833,7 @@
       const previousPeriodMisRate = previousPeriodShip ? previousPeriodMis / previousPeriodShip : 0;
       const periodLabelText = document.getElementById('periodLabel').textContent;
       const previousPeriodLabel = `${dateStr(previousPeriodRange.start)} ~ ${dateStr(previousPeriodRange.end)}`;
+      const shippingComparisonLabels = { current: periodLabelText, previous: previousPeriodLabel };
       const shippingComparison = buildShippingPeriodComparison(periodRange, previousPeriodRange, periodShipping, previousPeriodShipping);
       const periodComparisonItems = [
         { label: '출고량', current: periodShip, previous: previousPeriodShip },
@@ -1656,16 +1855,68 @@
       const commonCards = `
         ${viewToggle('shipping')}
         ${metricCard('올해 누적 출고량','택배_일별 YTD 기준',fmt(totalShip),`${baseDate.getFullYear()}년 전체 / 이번달 ${fmt(monthShip)}건`,'good',ytdShipping.slice(-7).map(r=>r.shipments))}
+        ${metricCard('올해 누적 누락·오배송','택배_일별 YTD 품질 이슈',`${fmt(ytdIssues)}건`,`누락 ${fmt(missing)}건 / 오배송 ${fmt(mis)}건 / 문제율 ${pct(ytdIssues, totalShip)}`,ytdIssues > 0 ? 'warn' : 'good',ytdShipping.slice(-7).map(r=>r.missing+r.misdelivery))}
         ${metricCard('이번달 출고량','전월 대비',fmt(monthShip),`전월 ${fmt(prevShip)}건 / ${changeRate(monthShip, prevShip)}`,changeTone(monthShip, prevShip),thisMonth.slice(-7).map(r=>r.shipments))}
-        ${metricCard('누락률','이번달 vs 전월',pct(sumMissing(thisMonth),monthShip),`전월 ${pct(sumMissing(prevMonth),prevShip)} / ${changeRate(monthMissingRate, prevMissingRate)}`,changeTone(monthMissingRate, prevMissingRate, true),thisMonth.slice(-7).map(r=>r.missing))}
-        ${metricCard('오배송률','이번달 vs 전월',pct(sumMis(thisMonth),monthShip),`전월 ${pct(sumMis(prevMonth),prevShip)} / ${changeRate(monthMisRate, prevMisRate)}`,changeTone(monthMisRate, prevMisRate, true),thisMonth.slice(-7).map(r=>r.misdelivery))}
-        ${metricCard('선택기간 출고량','직전 동일 기간 대비',fmt(periodShip),`${periodLabelText} / 직전 ${previousPeriodLabel} ${fmt(previousPeriodShip)}건 / ${changeRate(periodShip, previousPeriodShip)} · 누락 ${fmt(periodMissing)}건(${pct(periodMissing, periodShip)}) · 오배송 ${fmt(periodMis)}건(${pct(periodMis, periodShip)})`,changeTone(periodShip, previousPeriodShip),periodShipping.slice(-7).map(r=>r.shipments))}
+        ${metricCard('누락률','이번달 vs 전월',`${fmt(sumMissing(thisMonth))}건 · ${pct(sumMissing(thisMonth),monthShip)}`,`전월 ${fmt(sumMissing(prevMonth))}건 · ${pct(sumMissing(prevMonth),prevShip)} / ${changeRate(monthMissingRate, prevMissingRate)}`,changeTone(monthMissingRate, prevMissingRate, true),thisMonth.slice(-7).map(r=>r.missing))}
+        ${metricCard('오배송률','이번달 vs 전월',`${fmt(sumMis(thisMonth))}건 · ${pct(sumMis(thisMonth),monthShip)}`,`전월 ${fmt(sumMis(prevMonth))}건 · ${pct(sumMis(prevMonth),prevShip)} / ${changeRate(monthMisRate, prevMisRate)}`,changeTone(monthMisRate, prevMisRate, true),thisMonth.slice(-7).map(r=>r.misdelivery))}
+        ${metricCard('선택기간 출고량','직전 동일 기간 대비',fmt(periodShip),`${periodLabelText} / 직전 ${previousPeriodLabel} ${fmt(previousPeriodShip)}건 / ${changeRate(periodShip, previousPeriodShip)} · 누락 ${fmt(periodMissing)}건 · ${pct(periodMissing, periodShip)} / 오배송 ${fmt(periodMis)}건 · ${pct(periodMis, periodShip)}`,changeTone(periodShip, previousPeriodShip),periodShipping.slice(-7).map(r=>r.shipments))}
       `;
+      const shippingSummaryIssues = shippingComparison.currentMissing + shippingComparison.currentMis;
+      const shippingSummaryPending = shippingComparison.pendingCount > 0 || shippingComparison.futureCount > 0;
       const summaryCards = `
         ${viewToggle('shipping')}
-        ${renderShippingStatusSummary(shippingComparison, periodLabelText)}
-        ${renderShippingQualitySummary(shippingComparison)}
-        ${renderShippingDailyComparison(shippingComparison)}
+        ${renderSummaryKpiCard({
+          title: '출고량',
+          sub: '선택기간 · 입력 완료일 기준',
+          value: fmt(shippingComparison.currentShip),
+          unit: '건',
+          caption: `${periodLabelText} · 입력 완료 ${shippingComparison.completedCount}/${shippingComparison.requiredDays} 영업일`,
+          tone: shippingSummaryPending ? 'warn' : 'good',
+          badge: shippingSummaryPending ? '잠정 집계' : '집계 완료'
+        })}
+        ${renderSummaryKpiCard({
+          title: '누락률',
+          sub: '선택기간 출고 품질',
+          value: pct(shippingComparison.currentMissing, shippingComparison.currentShip),
+          caption: `누락 ${fmt(shippingComparison.currentMissing)}건 · 입력 완료일 기준`,
+          tone: shippingComparison.currentMissing > 0 ? 'warn' : 'good',
+          badge: shippingComparison.currentMissing > 0 ? '확인 필요' : '정상'
+        })}
+        ${renderSummaryKpiCard({
+          title: '오배송률',
+          sub: '선택기간 출고 품질',
+          value: pct(shippingComparison.currentMis, shippingComparison.currentShip),
+          caption: `오배송 ${fmt(shippingComparison.currentMis)}건 · 입력 완료일 기준`,
+          tone: shippingComparison.currentMis > 0 ? 'danger' : 'good',
+          badge: shippingComparison.currentMis > 0 ? '확인 필요' : '정상'
+        })}
+        ${renderSummaryKpiCard({
+          title: '전체 이슈',
+          sub: '누락 + 오배송',
+          value: fmt(shippingSummaryIssues),
+          unit: '건',
+          caption: `문제율 ${pct(shippingSummaryIssues, shippingComparison.currentShip)}`,
+          tone: shippingSummaryIssues > 0 ? 'warn' : 'good',
+          badge: shippingSummaryIssues > 0 ? '관리 필요' : '정상'
+        })}
+        ${renderVolumeComparisonCard({
+          title: '출고량 기간 비교',
+          subtitle: '상단 KPI와 분리해 선택기간·직전기간 출고량만 비교',
+          current: shippingComparison.currentShip,
+          previous: shippingComparison.previousShip,
+          unit: '건',
+          labels: shippingComparisonLabels,
+          currentMeta: `입력 완료 ${shippingComparison.completedCount}일`,
+          previousMeta: `출고 입력일 ${shippingComparison.previousCompletedCount}일`,
+          badge: shippingSummaryPending ? '잠정 비교' : '세로 막대',
+          badgeTone: shippingSummaryPending ? 'warn' : '',
+          statusItems: [
+            { label: '입력 완료', value: `${shippingComparison.completedCount}일`, tone: 'complete' },
+            { label: '미입력', value: `${shippingComparison.pendingCount}일`, tone: shippingComparison.pendingCount ? 'pending' : '' },
+            { label: '주말·휴무', value: `${shippingComparison.closedCount}일` },
+            ...(shippingComparison.futureCount ? [{ label: '예정', value: `${shippingComparison.futureCount}일` }] : [])
+          ]
+        })}
       `;
       if (state.viewMode.shipping === 'summary') {
         grid(`${summaryCards}
@@ -1676,6 +1927,7 @@
         return;
       }
       grid(`${commonCards}
+        ${renderShippingDailyComparison(shippingComparison, shippingComparisonLabels)}
         <article class="card wide"><div class="card-head"><div><div class="card-title">택배 출고량 분석</div><div class="card-sub">일간 / 주간 / 월간 전환 및 특정 월 자동 집계</div></div><span class="badge">${state.shippingView.month || '전체'}</span></div>
           <div class="table-tools">
             <div class="tool-left">
@@ -1763,10 +2015,11 @@
       return normalizeCurrency(currencyKey ? o[currencyKey] : 'USD');
     }
 
-    function getCoupangAnalysis(scope = 'ytd') {
+    function getCoupangAnalysis(scope = 'ytd', options = {}) {
       const rows = state.raw.coupang || [];
       const headers = rows[0] || [];
       const allObjects = rowsToObjects(rows);
+      const activeFlowMode = options.flowMode || state.coupang.flowMode;
 
       const dateKey = findHeader(headers, ['날짜','일자','판매일','출고일','주문일','주문일자','매출일','정산일','date']);
       const qtyKey = findHeader(headers, ['판매수량','출고수량','수량','판매개수','개수']);
@@ -1798,9 +2051,13 @@
       }
 
       const latestCoupangDate = todayDate();
+      const sourceDates = dateKey ? allObjects.map(o => toDate(o[dateKey])).filter(Boolean) : [];
+      const latestCoupangDataDate = sourceDates.length
+        ? new Date(Math.max(...sourceDates.map(date => date.getTime())))
+        : null;
 
-      // 쿠팡 판매 탭은 택배/제작처럼 운영 KPI 기준으로 관리하므로,
-      // 상단 기간 필터가 아니라 최신 판매일이 속한 연도 전체(YTD)를 기본 기준으로 사용한다.
+      // 올해 누적 데이터는 상세 화면의 월별 장기 흐름에만 사용하고,
+      // 요약 KPI·카테고리·원본 목록은 별도의 선택기간 분석값을 사용한다.
       const ytdObjects = dateKey
         ? allObjects.filter(o => {
             const d = toDate(o[dateKey]);
@@ -1808,16 +2065,30 @@
           })
         : allObjects;
 
-      const filteredObjects = dateKey ? filterObjectsByDate(allObjects, dateKey) : allObjects;
-      const periodObjects = scope === 'period' ? filteredObjects : ytdObjects;
+      const currentPeriodRange = getCurrentPeriodRange();
+      const previousPeriodRange = getPreviousPeriodRange(currentPeriodRange.start, currentPeriodRange.end);
+      const filterRange = (items, range) => dateKey
+        ? items.filter(o => {
+            const d = toDate(o[dateKey]);
+            if (!d) return false;
+            const compare = new Date(d);
+            compare.setHours(0,0,0,0);
+            return compare >= range.start && compare <= range.end;
+          })
+        : items;
+      const filteredObjects = filterRange(allObjects, currentPeriodRange);
+      const previousObjects = filterRange(allObjects, previousPeriodRange);
+      const periodObjects = scope === 'period'
+        ? filteredObjects
+        : (scope === 'previous' ? previousObjects : ytdObjects);
       const periodDates = [...new Set(periodObjects.map(o => dateStr(toDate(o[dateKey]))).filter(d => d !== '-'))].sort();
 
-      if (state.coupang.date && !periodDates.includes(state.coupang.date)) {
+      if (!options.ignoreDate && state.coupang.date && !periodDates.includes(state.coupang.date)) {
         state.coupang.date = '';
       }
 
       let objects = periodObjects;
-      if (state.coupang.date && dateKey) {
+      if (!options.ignoreDate && state.coupang.date && dateKey) {
         objects = objects.filter(o => dateStr(toDate(o[dateKey])) === state.coupang.date);
       }
 
@@ -1875,10 +2146,10 @@
 
       function getFlowKey(date) {
         if (!date) return '-';
-        if (state.coupang.flowMode === 'monthly') {
+        if (activeFlowMode === 'monthly') {
           return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         }
-        if (state.coupang.flowMode === 'weekly') {
+        if (activeFlowMode === 'weekly') {
           const temp = new Date(date);
           temp.setHours(0,0,0,0);
           const day = temp.getDay() || 7;
@@ -1976,6 +2247,7 @@
         productKey,
         categoryKey,
         basisKey,
+        flowMode: activeFlowMode,
         totalQty,
         totalBasis,
         totalSupply,
@@ -1992,6 +2264,7 @@
         prevMonthSupply,
         prevMonthPurchase,
         latestCoupangDate,
+        latestCoupangDataDate,
         dates: periodDates,
         dated,
         monthlyFlow,
@@ -2013,6 +2286,87 @@
           <div class="rank-qty">${fmt(r.qty)}개</div>
         </div>
       `).join('')}</div>`;
+    }
+
+    function compactKrw(value) {
+      const amount = Number(value || 0);
+      const abs = Math.abs(amount);
+      if (abs >= 100000000) return `${(amount / 100000000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}억`;
+      if (abs >= 10000) return `${(amount / 10000).toLocaleString('ko-KR', { maximumFractionDigits: 1 })}만`;
+      return `${fmt(amount)}원`;
+    }
+
+    function renderCoupangCategoryMetricToggle() {
+      const metric = state.coupang.categoryMetric === 'amount' ? 'amount' : 'qty';
+      return `<div class="category-metric-toggle" role="group" aria-label="카테고리 원형그래프 기준">
+        <button type="button" class="${metric === 'qty' ? 'active' : ''}" aria-pressed="${metric === 'qty'}" onclick="setCoupangCategoryMetric('qty')">수량</button>
+        <button type="button" class="${metric === 'amount' ? 'active' : ''}" aria-pressed="${metric === 'amount'}" onclick="setCoupangCategoryMetric('amount')">금액</button>
+      </div>`;
+    }
+
+    function renderCategoryDonutChart(items, options = {}) {
+      const colors = Array.isArray(options.colors) && options.colors.length
+        ? options.colors
+        : ['#22d3ee', '#5b7cfa', '#34d399', '#fbbf24', '#fb7185', '#a78bfa'];
+      const metric = options.metric === 'amount' ? 'amount' : 'qty';
+      const metricValue = item => metric === 'amount' ? toNum(item.value) : toNum(item.qty);
+      const safeItems = (Array.isArray(items) ? items : [])
+        .filter(r => r && String(r.name || '').trim() && metricValue(r) > 0)
+        .map(r => ({ ...r, name: String(r.name).trim(), qty: toNum(r.qty), value: toNum(r.value), chartValue: metricValue(r) }))
+        .sort((a, b) => b.chartValue - a.chartValue);
+
+      if (!safeItems.length) {
+        return `<div class="empty">${safeHtml(options.emptyMessage || '표시할 카테고리별 판매 데이터가 없습니다.')}</div>`;
+      }
+
+      const totalMetric = safeItems.reduce((sum, item) => sum + item.chartValue, 0);
+      const limit = Math.max(Number(options.limit) || 5, 2);
+      const shown = safeItems.slice(0, limit);
+      const remainder = safeItems.slice(limit);
+      if (remainder.length) {
+        shown.push({
+          name: `기타 ${remainder.length}개 카테고리`,
+          qty: remainder.reduce((sum, item) => sum + item.qty, 0),
+          value: remainder.reduce((sum, item) => sum + item.value, 0),
+          chartValue: remainder.reduce((sum, item) => sum + item.chartValue, 0)
+        });
+      }
+
+      let accumulated = 0;
+      const gradient = shown.map((item, index) => {
+        const start = accumulated;
+        accumulated += (item.chartValue / totalMetric) * 100;
+        const end = index === shown.length - 1 ? 100 : accumulated;
+        return `${colors[index % colors.length]} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
+      }).join(', ');
+      const scopeLabel = safeHtml(options.scopeLabel || '판매수량');
+      const amountLabel = safeHtml(options.amountLabel || '판매금액');
+      const exactTotal = metric === 'amount' ? money(totalMetric) : `${fmt(totalMetric)}개`;
+      const centerValue = metric === 'amount' ? compactKrw(totalMetric) : fmt(totalMetric);
+      const centerLabel = metric === 'amount' ? `${amountLabel} 합계` : safeHtml(options.quantityLabel || '총 판매수량');
+
+      return `
+        <div class="category-donut">
+          <div class="category-donut-visual">
+            <div class="category-donut-ring" style="background:conic-gradient(${gradient});">
+              <div class="category-donut-center">
+                <span>${scopeLabel}</span>
+                <strong title="${safeHtml(exactTotal)}">${safeHtml(centerValue)}</strong>
+                <small>${centerLabel}</small>
+              </div>
+            </div>
+          </div>
+          <div class="category-donut-legend">
+            ${shown.map((item, index) => `
+              <div class="category-donut-row">
+                <span class="category-donut-dot" style="background:${colors[index % colors.length]};color:${colors[index % colors.length]};"></span>
+                <span class="category-donut-name" title="${safeHtml(item.name)}">${safeHtml(item.name)}</span>
+                <span class="category-donut-stat"><strong>${metric === 'amount' ? money(item.chartValue) : `${fmt(item.chartValue)}개`}</strong><span>${((item.chartValue / totalMetric) * 100).toFixed(1)}%</span></span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
     }
 
     function renderCoupangFlowChart(items, options = {}) {
@@ -2127,57 +2481,74 @@
     }
 
     function renderCoupang() {
-      const a = getCoupangAnalysis('ytd');
-      const periodA = getCoupangAnalysis('period');
+      const selectedRange = getCurrentPeriodRange();
+      const selectedDays = Math.max(1, Math.floor((endOfDay(selectedRange.end) - selectedRange.start) / 86400000) + 1);
+      const summaryFlowMode = selectedDays <= 14 ? 'daily' : (selectedDays <= 90 ? 'weekly' : 'monthly');
+      const a = getCoupangAnalysis('ytd', { ignoreDate: true, flowMode: 'monthly' });
+      const periodA = getCoupangAnalysis('period', { ignoreDate: true, flowMode: summaryFlowMode });
+      const previousA = getCoupangAnalysis('previous', { ignoreDate: true, flowMode: summaryFlowMode });
+      const detailA = getCoupangAnalysis('period', { flowMode: state.coupang.flowMode });
       if (!a.headers.length) {
         grid(`<article class="card full"><div class="card-head"><div><div class="card-title">쿠팡 판매</div><div class="card-sub">데이터 로드 실패</div></div></div><div class="empty">쿠팡_판매 시트 데이터를 불러오지 못했습니다.</div></article>`);
         return;
       }
 
-      const totalPages = Math.max(Math.ceil(a.objects.length / state.coupang.pageSize), 1);
+      const totalPages = Math.max(Math.ceil(detailA.objects.length / state.coupang.pageSize), 1);
       state.coupang.page = Math.min(Math.max(state.coupang.page, 1), totalPages);
       const start = (state.coupang.page - 1) * state.coupang.pageSize;
-      const pageRows = a.objects.slice(start, start + state.coupang.pageSize);
+      const pageRows = detailA.objects.slice(start, start + state.coupang.pageSize);
       const headers = a.headers;
       const basisLabel = state.coupang.basis === 'purchase' ? '매입가 기준' : '공급가 기준';
+      const categoryMetric = state.coupang.categoryMetric === 'amount' ? 'amount' : 'qty';
+      const categoryAmountLabel = state.coupang.basis === 'purchase' ? '매입금액' : '공급가액';
+      const categoryMetricLabel = categoryMetric === 'amount' ? `${categoryAmountLabel} 기준` : '판매수량 기준';
       const flowLabel = state.coupang.flowMode === 'monthly' ? '월간 집계' : state.coupang.flowMode === 'weekly' ? '주간 집계' : '일별 집계';
+      const summaryFlowLabel = summaryFlowMode === 'monthly' ? '월간 집계' : summaryFlowMode === 'weekly' ? '주간 집계' : '일별 집계';
+      const periodLabel = document.getElementById('periodLabel').textContent;
+      const categoryScopeLabel = state.coupang.date || '선택기간';
+      const latestDataText = a.latestCoupangDataDate ? dateStr(a.latestCoupangDataDate) : '';
+      const categoryEmptyMessage = latestDataText
+        ? `선택기간에 카테고리별 판매 데이터가 없습니다. 쿠팡 원본의 최신 데이터는 ${latestDataText}입니다.`
+        : '선택기간에 카테고리별 판매 데이터가 없습니다.';
+      const periodAverageQty = periodA.dates.length ? periodA.totalQty / periodA.dates.length : 0;
+      const topCategory = [...periodA.categoryRank].sort((x, y) => y.qty - x.qty)[0];
 
-      const dateOptions = ['<option value="">전체 날짜</option>'].concat(a.dates.map(d => `<option value="${d}" ${state.coupang.date === d ? 'selected' : ''}>${d}</option>`)).join('');
+      const dateOptions = ['<option value="">선택기간 전체</option>'].concat(periodA.dates.map(d => `<option value="${d}" ${state.coupang.date === d ? 'selected' : ''}>${d}</option>`)).join('');
       const table = pageRows.map(o => `<tr>${headers.map(h => `<td>${o[h] || '-'}</td>`).join('')}</tr>`).join('');
       const monthDetailModal = renderCoupangMonthDetail(a);
 
       const commonCards = `
         ${viewToggle('coupang')}
-        ${metricCard('올해 누적 쿠팡 판매수량', a.qtyKey || '행 개수 기준', fmt(a.ytdTotalQty), `${a.latestCoupangDate.getFullYear()}년 전체 / 이번달 ${fmt(a.thisMonthQty)}개`, 'good', a.monthlyFlow.map(r=>r.qty))}
-        ${metricCard('올해 누적 공급가액', a.supplyTotalKey || a.supplyUnitKey || '공급가 컬럼 없음', money(a.ytdTotalSupply), `${a.latestCoupangDate.getFullYear()}년 전체 공급가액`, 'good', a.monthlyFlow.map(r=>r.supply))}
-        ${metricCard('이번달 판매수량', '전월 대비', fmt(a.thisMonthQty), `전월 ${fmt(a.prevMonthQty)}개 / ${changeRate(a.thisMonthQty, a.prevMonthQty)}`, changeTone(a.thisMonthQty, a.prevMonthQty), [a.prevMonthQty, a.thisMonthQty])}
-        ${metricCard('이번달 공급가액', '전월 대비', money(a.thisMonthSupply), `전월 ${money(a.prevMonthSupply)} / ${changeRate(a.thisMonthSupply, a.prevMonthSupply)}`, changeTone(a.thisMonthSupply, a.prevMonthSupply), [a.prevMonthSupply, a.thisMonthSupply])}
+        ${metricCard('선택기간 판매수량', periodLabel, fmt(periodA.totalQty), `직전기간 ${fmt(previousA.totalQty)}개 / ${changeRate(periodA.totalQty, previousA.totalQty)}`, changeTone(periodA.totalQty, previousA.totalQty), [previousA.totalQty, periodA.totalQty])}
+        ${metricCard('선택기간 공급가액', periodLabel, money(periodA.totalSupply), `직전기간 ${money(previousA.totalSupply)} / ${changeRate(periodA.totalSupply, previousA.totalSupply)}`, changeTone(periodA.totalSupply, previousA.totalSupply), [previousA.totalSupply, periodA.totalSupply])}
+        ${metricCard('판매 데이터 입력일', `${fmt(selectedDays)}일 중 입력된 날짜`, `${fmt(periodA.dates.length)}일`, `일평균 ${periodAverageQty.toLocaleString('ko-KR', { maximumFractionDigits: 1 })}개 / 직전 ${fmt(previousA.dates.length)}일`, 'good', [previousA.dates.length, periodA.dates.length])}
+        ${metricCard('판매 카테고리', '선택기간 판매수량 기준', `${fmt(periodA.categoryRank.length)}개`, topCategory ? `최다 ${topCategory.name} ${fmt(topCategory.qty)}개` : `최신 원본 데이터 ${latestDataText || '-'}`, periodA.categoryRank.length ? 'good' : 'warn', periodA.categoryRank.map(r => r.qty))}
       `;
       const summaryCards = `
         ${viewToggle('coupang')}
-        ${sizedMetricCard(metricCard('이번달 판매수량', '전월 대비', fmt(a.thisMonthQty), `전월 ${fmt(a.prevMonthQty)}개 / ${changeRate(a.thisMonthQty, a.prevMonthQty)}`, changeTone(a.thisMonthQty, a.prevMonthQty), [a.prevMonthQty, a.thisMonthQty]), 'third-kpi')}
-        ${sizedMetricCard(metricCard('이번달 공급가액', '전월 대비', money(a.thisMonthSupply), `전월 ${money(a.prevMonthSupply)} / ${changeRate(a.thisMonthSupply, a.prevMonthSupply)}`, changeTone(a.thisMonthSupply, a.prevMonthSupply), [a.prevMonthSupply, a.thisMonthSupply]), 'third-kpi')}
-        ${sizedMetricCard(metricCard('선택기간 판매수량', '상단 기간 선택 기준', fmt(periodA.totalQty), `${document.getElementById('periodLabel').textContent} / 공급가액 ${money(periodA.totalSupply)}`, 'good', periodA.dated.map(r=>r.qty)), 'third-kpi')}
+        ${sizedMetricCard(metricCard('선택기간 판매수량', periodLabel, fmt(periodA.totalQty), `직전 ${fmt(previousA.totalQty)}개 / ${changeRate(periodA.totalQty, previousA.totalQty)}`, changeTone(periodA.totalQty, previousA.totalQty), [previousA.totalQty, periodA.totalQty]), 'third-kpi')}
+        ${sizedMetricCard(metricCard('선택기간 공급가액', periodLabel, money(periodA.totalSupply), `직전 ${money(previousA.totalSupply)} / ${changeRate(periodA.totalSupply, previousA.totalSupply)}`, changeTone(periodA.totalSupply, previousA.totalSupply), [previousA.totalSupply, periodA.totalSupply]), 'third-kpi')}
+        ${sizedMetricCard(metricCard('판매 데이터 입력일', `${fmt(selectedDays)}일 중 입력된 날짜`, `${fmt(periodA.dates.length)}일`, `일평균 ${periodAverageQty.toLocaleString('ko-KR', { maximumFractionDigits: 1 })}개 / 직전 ${fmt(previousA.dates.length)}일`, 'good', [previousA.dates.length, periodA.dates.length]), 'third-kpi')}
       `;
       if (state.viewMode.coupang === 'summary') {
         grid(`${summaryCards}
-          <article class="card wide"><div class="card-head"><div><div class="card-title">월별 쿠팡 출고 금액</div><div class="card-sub">${basisLabel} / 월별 공급가액·수량 흐름 / 클릭 시 상세</div></div><span class="badge">월별</span></div>${renderCoupangFlowChart(a.monthlyFlow, { clickFn: 'setCoupangMonthDetail' })}</article>
-          <article class="card side"><div class="card-head"><div><div class="card-title">카테고리별 출고 현황</div><div class="card-sub">선택기간 판매수량 기준</div></div><span class="badge">${periodA.categoryKey || '카테고리 없음'}</span></div>${renderProductRankChart(periodA.categoryRank, 8)}</article>
+          <article class="card wide"><div class="card-head"><div><div class="card-title">선택기간 쿠팡 판매 흐름</div><div class="card-sub">${basisLabel} / ${summaryFlowLabel} / ${periodLabel}</div></div><span class="badge">${fmt(periodA.dates.length)}일 데이터</span></div>${renderCoupangFlowChart(periodA.dated)}</article>
+          <article class="card side"><div class="card-head category-card-head"><div><div class="card-title">카테고리별 출고 현황</div><div class="card-sub">${periodLabel} · ${categoryMetricLabel}</div></div><div class="category-card-actions">${renderCoupangCategoryMetricToggle()}<span class="badge">${fmt(periodA.categoryRank.length)}개</span></div></div>${renderCategoryDonutChart(periodA.categoryRank, { scopeLabel: '선택기간', metric: categoryMetric, amountLabel: categoryAmountLabel, emptyMessage: categoryEmptyMessage })}</article>
           ${monthDetailModal}
         `);
         return;
       }
       grid(`${commonCards}
-        <article class="card wide"><div class="card-head"><div><div class="card-title">월별 쿠팡 출고 금액</div><div class="card-sub">${basisLabel} / 월별 공급가액·수량 흐름</div></div><span class="badge">월별</span></div>
+        <article class="card wide"><div class="card-head"><div><div class="card-title">올해 월별 쿠팡 출고 금액</div><div class="card-sub">${basisLabel} / ${a.latestCoupangDate.getFullYear()}년 장기 흐름 / 클릭 시 월 상세</div></div><span class="badge">${a.latestCoupangDate.getFullYear()}년</span></div>
           ${renderCoupangFlowChart(a.monthlyFlow, { clickFn: 'setCoupangMonthDetail' })}
         </article>
         ${monthDetailModal}
 
-        <article class="card side"><div class="card-head"><div><div class="card-title">카테고리별 출고 현황</div><div class="card-sub">카테고리별 수량 및 금액</div></div><span class="badge">${a.categoryKey || '카테고리 없음'}</span></div>
-          ${renderProductRankChart(a.categoryRank, 8)}
+        <article class="card side"><div class="card-head category-card-head"><div><div class="card-title">카테고리별 출고 현황</div><div class="card-sub">${state.coupang.date || periodLabel} · ${categoryMetricLabel}</div></div><div class="category-card-actions">${renderCoupangCategoryMetricToggle()}<span class="badge">${fmt(detailA.categoryRank.length)}개</span></div></div>
+          ${renderCategoryDonutChart(detailA.categoryRank, { scopeLabel: categoryScopeLabel, metric: categoryMetric, amountLabel: categoryAmountLabel, emptyMessage: categoryEmptyMessage })}
         </article>
 
-        <article class="card wide"><div class="card-head"><div><div class="card-title">쿠팡 판매 흐름</div><div class="card-sub">${basisLabel} / ${flowLabel} / 금액+수량 동시 표시</div></div><span class="badge">${a.basisKey || '기준 컬럼 없음'}</span></div>
+        <article class="card wide"><div class="card-head"><div><div class="card-title">선택기간 쿠팡 판매 흐름</div><div class="card-sub">${basisLabel} / ${flowLabel} / ${periodLabel}</div></div><span class="badge">${detailA.basisKey || '기준 컬럼 없음'}</span></div>
           <div class="table-tools">
             <div class="tool-left">
               <select id="coupangFlowMode" onchange="setCoupangFlowMode(this.value)">
@@ -2190,24 +2561,24 @@
               <div class="pill">미니멀 운영 분석형 차트</div>
             </div>
           </div>
-          ${renderCoupangFlowChart(a.dated)}
+          ${renderCoupangFlowChart(detailA.dated)}
         </article>
 
-        <article class="card half"><div class="card-head"><div><div class="card-title">품목별 금액 순위</div><div class="card-sub">${basisLabel} / 선택 기간 기준 상위 10개 품목</div></div><span class="badge">금액 큰 순</span></div>${renderProductRankChart(a.productRank, 10)}</article>
+        <article class="card half"><div class="card-head"><div><div class="card-title">품목별 금액 순위</div><div class="card-sub">${basisLabel} / 선택기간 기준 상위 10개 품목</div></div><span class="badge">금액 큰 순</span></div>${renderProductRankChart(detailA.productRank, 10)}</article>
 
-        <article class="card side"><div class="card-head"><div><div class="card-title">쿠팡 기준 선택</div><div class="card-sub">날짜별 / 금액 기준 전환</div></div></div><div class="issue-list">
-          <div class="issue"><div class="issue-icon">📅</div><div><strong>날짜 선택</strong><span>${a.dateKey || '날짜열 감지 안됨'}</span></div><div></div></div>
+        <article class="card side"><div class="card-head"><div><div class="card-title">쿠팡 기준 선택</div><div class="card-sub">선택기간 내 날짜 / 금액 기준 전환</div></div></div><div class="issue-list">
+          <div class="issue"><div class="issue-icon">📅</div><div><strong>선택기간 내 날짜</strong><span>${detailA.dateKey || '날짜열 감지 안됨'}</span></div><div></div></div>
           <select id="coupangDateSelect" onchange="setCoupangDate(this.value)">${dateOptions}</select>
           <div class="issue"><div class="issue-icon">₩</div><div><strong>금액 기준</strong><span>공급가 / 매입가 전환</span></div><div></div></div>
           <select id="coupangBasisSelect" onchange="setCoupangBasis(this.value)">
             <option value="supply" ${state.coupang.basis === 'supply' ? 'selected' : ''}>공급가 기준</option>
             <option value="purchase" ${state.coupang.basis === 'purchase' ? 'selected' : ''}>매입가 기준</option>
           </select>
-          <div class="issue"><div class="issue-icon">🔎</div><div><strong>감지 컬럼</strong><span>수량: ${a.qtyKey || '-'} / 공급: ${a.supplyTotalKey || a.supplyUnitKey || '-'} / 매입: ${a.purchaseTotalKey || a.purchaseUnitKey || '-'}</span></div><div class="issue-num">확인</div></div>
-          <div class="issue"><div class="issue-icon">🏷️</div><div><strong>카테고리</strong><span>${a.categoryKey || '카테고리 컬럼 감지 안됨'}</span></div><div class="issue-num">${fmt(a.categoryRank.length)}</div></div>
+          <div class="issue"><div class="issue-icon">🔎</div><div><strong>감지 컬럼</strong><span>수량: ${detailA.qtyKey || '-'} / 공급: ${detailA.supplyTotalKey || detailA.supplyUnitKey || '-'} / 매입: ${detailA.purchaseTotalKey || detailA.purchaseUnitKey || '-'}</span></div><div class="issue-num">확인</div></div>
+          <div class="issue"><div class="issue-icon">🏷️</div><div><strong>카테고리</strong><span>${detailA.categoryKey || '카테고리 컬럼 감지 안됨'}</span></div><div class="issue-num">${fmt(detailA.categoryRank.length)}</div></div>
         </div></article>
 
-        <article class="card full"><div class="card-head"><div><div class="card-title">쿠팡 원본 데이터 전체 보기</div><div class="card-sub">기간 내 ${fmt(a.periodObjects.length)}행 / 현재 표시 ${fmt(a.objects.length)}행 / 페이지당 ${fmt(state.coupang.pageSize)}행</div></div></div>
+        <article class="card full"><div class="card-head"><div><div class="card-title">쿠팡 원본 데이터 전체 보기</div><div class="card-sub">선택기간 ${fmt(periodA.objects.length)}행 / 현재 표시 ${fmt(detailA.objects.length)}행 / 페이지당 ${fmt(state.coupang.pageSize)}행</div></div></div>
           <div class="table-tools">
             <div class="tool-left">
               <select id="coupangPageSize" onchange="setCoupangPageSize(this.value)">
@@ -2218,7 +2589,7 @@
               </select>
               <div class="pill">${basisLabel}</div>
             </div>
-            <div class="tool-right"><div class="pill">${document.getElementById('periodLabel').textContent}</div><div class="pill">${a.objects.length ? fmt(start + 1) : 0} - ${fmt(Math.min(start + state.coupang.pageSize, a.objects.length))} / ${fmt(a.objects.length)}</div></div>
+            <div class="tool-right"><div class="pill">${periodLabel}</div><div class="pill">${detailA.objects.length ? fmt(start + 1) : 0} - ${fmt(Math.min(start + state.coupang.pageSize, detailA.objects.length))} / ${fmt(detailA.objects.length)}</div></div>
           </div>
           <div class="table-wrap"><table><thead><tr>${headers.map(h=>`<th>${h || '-'}</th>`).join('')}</tr></thead><tbody>${table}</tbody></table></div>
           <div class="pagination">
@@ -2230,6 +2601,11 @@
           </div>
         </article>
       `);
+    }
+
+    function setCoupangCategoryMetric(value) {
+      state.coupang.categoryMetric = value === 'amount' ? 'amount' : 'qty';
+      renderCoupang();
     }
 
     function setCoupangDate(value) {
@@ -3318,12 +3694,61 @@
         ${metricCard('이번달 불량·폐기율','전월 대비',pct(monthDefect, monthQty),`전월 ${pct(prevMonthDefect, prevMonthQty)} / ${changeRate(monthDefectRate, prevMonthDefectRate)}`,changeTone(monthDefectRate, prevMonthDefectRate, true),thisMonthProd.map(r=>r.defect))}
         ${metricCard('선택기간 제작수량','상단 기간 선택 기준',fmt(periodA.totalQty),`${document.getElementById('periodLabel').textContent} / 불량·폐기율 ${periodDefectRate}`,periodA.totalDefect > 0 ? 'warn' : 'good',periodA.daily.map(r=>r.qty))}
       `;
+      const productionSummaryDefectTone = periodA.totalDefect > 0 && periodA.defectGoalPassed === false ? 'danger' : periodA.totalDefect > 0 ? 'warn' : 'good';
       const summaryCards = `
         ${viewToggle('production')}
         ${productionFilter}
-        ${renderProductionStatusSummary(periodA, previousPeriodA, productionComparison, productionComparisonLabels, productionScopeLabel)}
-        ${renderProductionQualitySummary(periodA, previousPeriodA)}
-        ${renderProductionDailyComparison(productionComparison, productionComparisonLabels)}
+        ${renderSummaryKpiCard({
+          title: '제작수량',
+          sub: `선택기간 · ${productionScopeLabel}`,
+          value: fmt(periodA.totalQty),
+          unit: '개',
+          caption: `${productionPeriodLabel} · 제작 ${productionComparison.currentDays}일`,
+          tone: periodA.totalQty > 0 ? 'good' : 'warn',
+          badge: periodA.totalQty > 0 ? '현재 집계' : '데이터 없음'
+        })}
+        ${renderSummaryKpiCard({
+          title: '양품률',
+          sub: '선택기간 제작 품질',
+          value: pct(periodA.totalGood, periodA.totalQty),
+          caption: `양품 ${fmt(periodA.totalGood)}개 · 제작수량 기준`,
+          tone: 'good',
+          badge: '품질'
+        })}
+        ${renderSummaryKpiCard({
+          title: '불량·폐기율',
+          sub: '선택기간 제작 품질',
+          value: pct(periodA.totalDefect, periodA.totalQty),
+          caption: `불량·폐기 ${fmt(periodA.totalDefect)}개 · 목표 ${periodA.defectGoalText}`,
+          tone: productionSummaryDefectTone,
+          badge: periodA.defectGoalLabel
+        })}
+        ${renderSummaryKpiCard({
+          title: '일평균 제작',
+          sub: '제작일 기준 평균',
+          value: productionAverageText(productionComparison.currentAvg),
+          unit: '개',
+          caption: `선택기간 제작일수 ${productionComparison.currentDays}일`,
+          tone: periodA.totalQty > 0 ? 'good' : 'warn',
+          badge: '현재 집계'
+        })}
+        ${renderVolumeComparisonCard({
+          title: '제작량 기간 비교',
+          subtitle: '상단 KPI와 분리해 선택기간·직전기간 제작수량만 비교',
+          current: periodA.totalQty,
+          previous: previousPeriodA.totalQty,
+          unit: '개',
+          labels: productionComparisonLabels,
+          currentMeta: `제작일 ${productionComparison.currentDays}일`,
+          previousMeta: `제작일 ${productionComparison.previousDays}일`,
+          badge: '세로 막대',
+          statusItems: [
+            { label: '제작일수', value: `${productionComparison.currentDays}일`, tone: 'complete' },
+            { label: '맥세이프 케이스', value: `${fmt(productionComparison.categories.magsafe)}개` },
+            { label: '프레임 케이스', value: `${fmt(productionComparison.categories.frame)}개` },
+            ...(productionComparison.categories.other > 0 ? [{ label: '기타', value: `${fmt(productionComparison.categories.other)}개` }] : [])
+          ]
+        })}
       `;
       if (state.viewMode.production === 'summary') {
         grid(`${summaryCards}
@@ -3333,6 +3758,7 @@
         return;
       }
       grid(`${commonCards}
+        ${renderProductionDailyComparison(productionComparison, productionComparisonLabels)}
         <article class="card wide"><div class="card-head"><div><div class="card-title">올해 일별 제작 흐름</div><div class="card-sub">기간 필터 제외 / 올해 제작 데이터 전체</div></div><span class="badge">${a.dateKey || '날짜열 없음'}</span></div>${a.daily.length ? `${renderBarChart(a.daily, 'qty', 'label')}` : '<div class="empty">일별 차트로 표시할 데이터가 없습니다.</div>'}</article>
 
         <article class="card side"><div class="card-head"><div><div class="card-title">제작 이슈 요약</div><div class="card-sub">불량/폐기 중심 확인</div></div><span class="badge ${a.totalDefect > 0 ? 'warn' : ''}">${fmt(a.totalDefect)}건</span></div><div class="issue-list">
@@ -3355,6 +3781,442 @@
 
         <article class="card full"><div class="card-head"><div><div class="card-title">제작 원본 데이터</div><div class="card-sub">선택 기간 기준 상위 30행</div></div></div><div class="table-wrap"><table><thead><tr>${previewHeaders.map(h=>`<th>${h || '-'}</th>`).join('')}</tr></thead><tbody>${previewRows}</tbody></table></div></article>
       `);
+    }
+
+    function extractConnectedTable(rows, requiredHeaders) {
+      const normalized = value => String(value || '').replaceAll(' ', '').toLowerCase();
+      const sourceRows = Array.isArray(rows) ? rows : [];
+      const headerIndex = sourceRows.findIndex(row => requiredHeaders.every(required =>
+        (row || []).some(cell => normalized(cell).includes(normalized(required)))
+      ));
+      if (headerIndex < 0) return { headerIndex: -1, headers: [], objects: [] };
+
+      const rawHeaders = sourceRows[headerIndex] || [];
+      let lastHeaderIndex = rawHeaders.length - 1;
+      while (lastHeaderIndex >= 0 && !String(rawHeaders[lastHeaderIndex] || '').trim()) lastHeaderIndex--;
+      // gviz CSV는 상단 제목/구분 행을 실제 헤더 셀과 합쳐 반환할 수 있으므로
+      // 알려진 열 이름이 포함돼 있으면 대시보드용 표준 헤더로 정규화합니다.
+      const canonicalHeaders = [
+        '검수완료수량','검수진행률','공장약속일','누적불량','불량수량','불량유형','검수수량',
+        '입고수량','관리번호','공급사','발주일','선적일','입고일','불량률','지연일','검수일',
+        'SKU','원인','조치','상태'
+      ];
+      const headers = rawHeaders.slice(0, lastHeaderIndex + 1).map(header => {
+        const raw = String(header || '').trim();
+        const normalizedRaw = normalized(raw);
+        const match = canonicalHeaders.reduce((best, candidate) => {
+          const index = normalizedRaw.lastIndexOf(normalized(candidate));
+          return index > best.index ? { candidate, index } : best;
+        }, { candidate: '', index: -1 });
+        return match.candidate || raw;
+      });
+      const objects = sourceRows.slice(headerIndex + 1).map(row => {
+        const object = {};
+        headers.forEach((header, index) => {
+          if (header) object[header] = row[index] ?? '';
+        });
+        object._row = row;
+        return object;
+      }).filter(object => headers.some(header => header && String(object[header] || '').trim()));
+      return { headerIndex, headers, objects };
+    }
+
+    function getInspectionAnalysis() {
+      const lotTable = extractConnectedTable(state.raw.productionInbound || [], ['관리번호','SKU','입고수량','검수완료수량','누적불량']);
+      const defectTable = extractConnectedTable(state.raw.inspectionDefects || [], ['검수일','관리번호','검수수량','불량수량']);
+
+      const defectRows = defectTable.objects.map(object => ({
+        date: toDate(object['검수일']),
+        dateText: String(object['검수일'] || '').trim(),
+        managementNo: String(object['관리번호'] || '').trim(),
+        inspected: toNum(object['검수수량']),
+        defect: toNum(object['불량수량']),
+        type: String(object['불량유형'] || '').trim(),
+        cause: String(object['원인'] || '').trim(),
+        action: String(object['조치'] || '').trim()
+      })).filter(row => row.managementNo && (row.date || row.inspected || row.defect || row.type || row.cause || row.action));
+
+      const detailByLot = new Map();
+      defectRows.forEach(row => {
+        if (!detailByLot.has(row.managementNo)) detailByLot.set(row.managementNo, []);
+        detailByLot.get(row.managementNo).push(row);
+      });
+
+      const allLots = lotTable.objects.map(object => {
+        const managementNo = String(object['관리번호'] || '').trim();
+        const details = detailByLot.get(managementNo) || [];
+        const inspected = toNum(object['검수완료수량']);
+        const defect = toNum(object['누적불량']);
+        const detailInspected = details.reduce((sum, row) => sum + row.inspected, 0);
+        const detailDefect = details.reduce((sum, row) => sum + row.defect, 0);
+        const inspectionDates = details.map(row => row.date).filter(Boolean);
+        const inboundQty = toNum(object['입고수량']);
+        return {
+          managementNo,
+          sku: String(object['SKU'] || '').trim(),
+          supplier: String(object['공급사'] || '').trim(),
+          orderDate: toDate(object['발주일']),
+          promiseDate: toDate(object['공장약속일']),
+          shipDate: toDate(object['선적일']),
+          inboundDate: toDate(object['입고일']),
+          inboundQty,
+          inspected,
+          defect,
+          remaining: Math.max(inboundQty - inspected, 0),
+          progressRate: inboundQty ? inspected / inboundQty : 0,
+          defectRate: inspected ? defect / inspected : 0,
+          status: String(object['상태'] || '').trim() || (inboundQty && inspected >= inboundQty ? '검수완료' : '검수중'),
+          details,
+          detailInspected,
+          detailDefect,
+          linked: inspected === detailInspected && defect === detailDefect,
+          latestInspectionDate: inspectionDates.length ? new Date(Math.max(...inspectionDates.map(date => date.getTime()))) : null
+        };
+      }).filter(lot => lot.managementNo);
+
+      const availableLots = allLots.map(lot => lot.managementNo);
+      let selectedLots = Array.isArray(state.inspection.selectedLots)
+        ? state.inspection.selectedLots.filter(id => availableLots.includes(id))
+        : null;
+      if (selectedLots && selectedLots.length === availableLots.length && availableLots.every(id => selectedLots.includes(id))) {
+        selectedLots = null;
+      }
+      state.inspection.selectedLots = selectedLots;
+      const selectedLotSet = selectedLots === null ? null : new Set(selectedLots);
+      const lots = selectedLotSet === null ? allLots : allLots.filter(lot => selectedLotSet.has(lot.managementNo));
+      const selectedLotIds = new Set(lots.map(lot => lot.managementNo));
+      const details = defectRows.filter(row => selectedLotIds.has(row.managementNo));
+      const lotById = new Map(allLots.map(lot => [lot.managementNo, lot]));
+
+      const totalInbound = lots.reduce((sum, lot) => sum + lot.inboundQty, 0);
+      const totalInspected = lots.reduce((sum, lot) => sum + lot.inspected, 0);
+      const totalDefect = lots.reduce((sum, lot) => sum + lot.defect, 0);
+      const remaining = Math.max(totalInbound - totalInspected, 0);
+      const progressRate = totalInbound ? totalInspected / totalInbound : 0;
+      const defectRate = totalInspected ? totalDefect / totalInspected : 0;
+
+      const periodRange = getCurrentPeriodRange();
+      const periodDetails = details.filter(row => {
+        if (!row.date) return false;
+        const date = new Date(row.date);
+        date.setHours(0,0,0,0);
+        return date >= periodRange.start && date <= periodRange.end;
+      });
+      const periodInspected = periodDetails.reduce((sum, row) => sum + row.inspected, 0);
+      const periodDefect = periodDetails.reduce((sum, row) => sum + row.defect, 0);
+      const periodDefectRate = periodInspected ? periodDefect / periodInspected : 0;
+
+      const dailyMap = new Map();
+      periodDetails.forEach(row => {
+        if (!row.date) return;
+        const key = dateStr(row.date);
+        if (!dailyMap.has(key)) dailyMap.set(key, { label: key, date: row.date, inspected: 0, defect: 0 });
+        const day = dailyMap.get(key);
+        day.inspected += row.inspected;
+        day.defect += row.defect;
+      });
+      const daily = [...dailyMap.values()].sort((a, b) => a.date - b.date);
+
+      const defectTypeMap = new Map();
+      details.forEach(row => {
+        if (row.defect <= 0) return;
+        const name = row.type || row.cause || '유형 미입력';
+        defectTypeMap.set(name, (defectTypeMap.get(name) || 0) + row.defect);
+      });
+      const defectTypes = [...defectTypeMap.entries()]
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+
+      const inboundDates = lots.map(lot => lot.inboundDate).filter(Boolean);
+      const latestInboundDate = inboundDates.length ? new Date(Math.max(...inboundDates.map(date => date.getTime()))) : null;
+      const mismatchLots = lots.filter(lot => !lot.linked);
+      const allLotIds = new Set(allLots.map(lot => lot.managementNo));
+      const orphanDetails = defectRows.filter(row => !allLotIds.has(row.managementNo));
+
+      return {
+        lotTable,
+        defectTable,
+        allLots,
+        lots,
+        details,
+        periodDetails,
+        defectRows,
+        availableLots,
+        selectedLots,
+        lotById,
+        totalInbound,
+        totalInspected,
+        totalDefect,
+        remaining,
+        progressRate,
+        defectRate,
+        periodInspected,
+        periodDefect,
+        periodDefectRate,
+        periodDayCount: new Set(periodDetails.map(row => row.date ? dateStr(row.date) : '').filter(Boolean)).size,
+        daily,
+        defectTypes,
+        latestInboundDate,
+        mismatchLots,
+        orphanDetails
+      };
+    }
+
+    function toggleInspectionLotMenu(event) {
+      if (event) event.stopPropagation();
+      state.inspection.lotFilterOpen = !state.inspection.lotFilterOpen;
+      renderInspection();
+    }
+
+    function setAllInspectionLots(checked) {
+      state.inspection.selectedLots = checked ? null : [];
+      state.inspection.lotFilterOpen = true;
+      renderInspection();
+    }
+
+    function toggleInspectionLot(value, checked) {
+      const analysis = getInspectionAnalysis();
+      const available = analysis.availableLots;
+      const selected = new Set(state.inspection.selectedLots === null ? available : state.inspection.selectedLots);
+      if (checked) selected.add(value);
+      else selected.delete(value);
+      const next = available.filter(id => selected.has(id));
+      state.inspection.selectedLots = next.length === available.length ? null : next;
+      state.inspection.lotFilterOpen = true;
+      renderInspection();
+    }
+
+    function openInspectionDefectDetail(event) {
+      if (event) event.stopPropagation();
+      state.inspection.lotFilterOpen = false;
+      state.inspection.defectDetailOpen = true;
+      renderInspection();
+    }
+
+    function closeInspectionDefectDetail() {
+      state.inspection.defectDetailOpen = false;
+      renderInspection();
+    }
+
+    function toggleInspectionDetails() {
+      state.inspection.detailExpanded = !state.inspection.detailExpanded;
+      renderInspection();
+    }
+
+    function renderInspectionDefectModal(a, scopeLabel) {
+      if (!state.inspection.defectDetailOpen) return '';
+      const reasonItems = a.defectTypes.map(item => ({ name:item.name, qty:item.value, value:0 }));
+      const reasonSourceTotal = reasonItems.reduce((sum, item) => sum + item.qty, 0);
+      const unlinked = Math.max(a.totalDefect - reasonSourceTotal, 0);
+      if (unlinked > 0) reasonItems.push({ name:'사유 미연동', qty:unlinked, value:0 });
+      const chartTotal = reasonItems.reduce((sum, item) => sum + item.qty, 0);
+      const mismatchNote = reasonSourceTotal === a.totalDefect
+        ? '불량 사유 비율은 각 사유의 불량수량 ÷ 선택 로트 누적 불량수량으로 계산합니다.'
+        : reasonSourceTotal < a.totalDefect
+          ? `누적 불량 ${fmt(a.totalDefect)}개에서 검수불량 상세의 사유 합계 ${fmt(reasonSourceTotal)}개를 뺀 ${fmt(unlinked)}개를 ‘사유 미연동’으로 구분했습니다.`
+          : `검수불량 상세의 사유 합계 ${fmt(reasonSourceTotal)}개가 누적 불량 ${fmt(a.totalDefect)}개보다 ${fmt(reasonSourceTotal - a.totalDefect)}개 많습니다. 원형그래프는 상세 사유 합계 기준이며 연동값 확인이 필요합니다.`;
+
+      return `
+        <div class="modal-backdrop inspection-defect-backdrop" onclick="closeInspectionDefectDetail()">
+          <div class="modal-card inspection-defect-modal" onclick="event.stopPropagation()">
+            <div class="modal-head">
+              <div><div class="card-title">누적 불량 사유 구성</div><div class="card-sub">${safeHtml(scopeLabel)} · 선택한 관리번호의 전체 누적 기준</div></div>
+              <button class="modal-close" onclick="closeInspectionDefectDetail()">닫기</button>
+            </div>
+            <div class="inspection-defect-summary">
+              <div class="pill">누적 불량 ${fmt(a.totalDefect)}개</div>
+              <div class="pill">사유 집계 ${fmt(chartTotal)}개</div>
+              <div class="pill">불량률 ${pct(a.totalDefect,a.totalInspected)}</div>
+            </div>
+            ${renderCategoryDonutChart(reasonItems, {
+              metric:'qty',
+              limit:8,
+              scopeLabel:'불량 사유',
+              quantityLabel:'사유 집계 합계',
+              emptyMessage:'입력된 불량 사유가 없습니다.',
+              colors:['#fb7185','#ef4444','#f97316','#fbbf24','#a78bfa','#f43f5e','#dc2626','#fb923c']
+            })}
+            <div class="inspection-defect-note">${safeHtml(mismatchNote)}</div>
+          </div>
+        </div>`;
+    }
+
+    document.addEventListener('click', event => {
+      if (!state.inspection.lotFilterOpen) return;
+      if (event.target?.closest?.('[data-inspection-lot-filter]')) return;
+      state.inspection.lotFilterOpen = false;
+      if (state.tab === 'inspection') renderInspection();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      if (state.inspection.defectDetailOpen) {
+        state.inspection.defectDetailOpen = false;
+        if (state.tab === 'inspection') renderInspection();
+        return;
+      }
+      if (!state.inspection.lotFilterOpen) return;
+      state.inspection.lotFilterOpen = false;
+      if (state.tab === 'inspection') renderInspection();
+    });
+
+    function inspectionLotShortLabel(value) {
+      const text = String(value || '');
+      return text.length > 13 ? `${text.slice(0, 6)}…${text.slice(-5)}` : text;
+    }
+
+    function renderInspectionKpiCard({ title, sub, value, caption, tone, badge, badgeClass = '', lots, valueKey, maxValue, scaleLabel, onClick = '' }) {
+      const count = lots.length;
+      const gap = count <= 4 ? 10 : count <= 8 ? 7 : count <= 14 ? 4 : count <= 24 ? 2 : 1;
+      const labelStep = count > 24 ? 4 : count > 14 ? 3 : count > 8 ? 2 : 1;
+      const showFullLotLabels = count <= 6;
+      const safeMax = Math.max(Number(maxValue || 0), 1);
+      const bars = lots.map((lot, index) => {
+        const amount = Number(lot[valueKey] || 0);
+        // 최대 막대도 84%까지만 사용해 막대 위 수량 라벨 공간을 항상 확보합니다.
+        const height = amount > 0 ? Math.min((amount / safeMax) * 84, 84) : 0;
+        const showLabel = labelStep === 1 || index % labelStep === 0 || index === count - 1;
+        const fullLabel = String(lot.managementNo || `로트 ${index + 1}`);
+        const displayLabel = showFullLotLabels ? fullLabel : inspectionLotShortLabel(fullLabel);
+        const tooltip = `${fullLabel} · ${title} ${fmt(amount)}개`;
+        return `<div class="inspection-lot-chart-col" title="${safeHtml(tooltip)}" aria-label="${safeHtml(tooltip)}">
+          <div class="inspection-lot-chart-stack">
+            <div class="inspection-lot-chart-value">${showLabel ? `${fmt(amount)}개` : '&nbsp;'}</div>
+            <div class="inspection-lot-chart-bar ${amount > 0 ? 'has-value' : ''}" style="--bar-height:${height.toFixed(2)}%"></div>
+          </div>
+          <div class="inspection-lot-chart-label">${showLabel ? safeHtml(displayLabel) : '&nbsp;'}</div>
+        </div>`;
+      }).join('');
+      const chart = count
+        ? `<div class="inspection-lot-chart ${showFullLotLabels ? 'labels-full' : ''}" style="--lot-gap:${gap}px" role="img" aria-label="${safeHtml(title)} 로트별 세로 막대그래프">${bars}</div>`
+        : '<div class="inspection-chart-empty">선택된 로트가 없습니다.<br>위의 관리번호 필터에서 로트를 선택해 주세요.</div>';
+      const interactiveClass = onClick ? ' is-clickable' : '';
+      const interactiveAttrs = onClick
+        ? ` role="button" tabindex="0" onclick="${onClick}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${onClick}}" title="클릭해서 불량 사유 구성 보기"`
+        : '';
+      return `<article class="card kpi inspection-kpi-card tone-${tone}${interactiveClass}"${interactiveAttrs}>
+        <div class="card-head"><div><div class="card-title">${safeHtml(title)}</div><div class="card-sub">${safeHtml(sub)}</div></div><span class="badge ${badgeClass}">${safeHtml(badge)}</span></div>
+        <div class="kpi-value">${safeHtml(value)}</div>
+        <div class="kpi-caption">${safeHtml(caption)}</div>
+        <div class="inspection-chart-head"><span class="inspection-chart-key">막대 위 수량 · 아래 관리번호</span><span class="inspection-chart-scale">${safeHtml(scaleLabel)}</span></div>
+        ${chart}
+      </article>`;
+    }
+
+    function renderInspectionLotProgress(lots) {
+      if (!lots.length) return '<div class="empty">표시할 생산입고 로트가 없습니다.</div>';
+      return `<div class="inspection-lot-list">${lots.map(lot => {
+        const progress = Math.min(Math.max(lot.progressRate * 100, 0), 100);
+        const statusClass = lot.remaining > 0 || lot.defect > 0 ? 'warn' : '';
+        return `<div class="inspection-lot">
+          <div class="inspection-lot-top">
+            <div class="inspection-lot-name"><strong>${safeHtml(lot.sku || lot.managementNo)}</strong><span>${safeHtml(lot.managementNo)} · ${safeHtml(lot.supplier || '공급사 미입력')}</span></div>
+            <span class="badge ${statusClass}">${safeHtml(lot.status)}</span>
+          </div>
+          <div class="inspection-lot-stats">
+            <div class="inspection-lot-stat"><span>입고</span><strong>${fmt(lot.inboundQty)}개</strong></div>
+            <div class="inspection-lot-stat"><span>검수 완료</span><strong>${fmt(lot.inspected)}개</strong></div>
+            <div class="inspection-lot-stat"><span>잔여</span><strong>${fmt(lot.remaining)}개</strong></div>
+            <div class="inspection-lot-stat"><span>불량률</span><strong>${pct(lot.defect, lot.inspected)}</strong></div>
+          </div>
+          <div class="inspection-lot-progress"><div style="width:${progress}%"></div></div>
+          <div class="inspection-lot-foot"><span>검수진행률 ${pct(lot.inspected, lot.inboundQty)} · 누적불량 ${fmt(lot.defect)}개</span><span>입고 ${dateStr(lot.inboundDate)} · 최근 검수 ${dateStr(lot.latestInspectionDate)} · ${lot.linked ? '연동 일치' : '연동값 확인 필요'}</span></div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+    function renderInspection() {
+      const a = getInspectionAnalysis();
+      const missingSources = [];
+      if (!a.lotTable.headers.length) missingSources.push('생산입고');
+      if (!a.defectTable.headers.length) missingSources.push('검수불량');
+      if (missingSources.length) {
+        grid(`<article class="card full"><div class="card-head"><div><div class="card-title">생산 입고 / 검수 현황</div><div class="card-sub">데이터 로드 실패</div></div></div><div class="empty">${missingSources.join(', ')} 시트의 헤더 또는 데이터를 불러오지 못했습니다.</div></article>`);
+        return;
+      }
+
+      const allLotsSelected = a.selectedLots === null;
+      const selectedSet = new Set(allLotsSelected ? a.availableLots : a.selectedLots);
+      const scopeLabel = allLotsSelected
+        ? '전체 로트'
+        : a.lots.length === 0
+          ? '선택 없음'
+          : a.lots.length === 1
+            ? a.lots[0].managementNo
+            : `선택 ${fmt(a.lots.length)}개 로트`;
+      const selectionLabel = allLotsSelected
+        ? `전체 ${fmt(a.allLots.length)}개 로트`
+        : a.lots.length
+          ? `${fmt(a.lots.length)}개 로트 선택`
+          : '선택된 로트 없음';
+      const lotChecks = a.allLots.map(lot => `<label class="inspection-lot-check">
+        <input type="checkbox" value="${safeHtml(lot.managementNo)}" ${selectedSet.has(lot.managementNo) ? 'checked' : ''} onchange="toggleInspectionLot(this.value,this.checked)">
+        <span class="inspection-lot-check-copy"><strong>${safeHtml(lot.sku || lot.managementNo)}</strong><span>${safeHtml(lot.managementNo)}</span></span>
+        <span class="inspection-lot-check-qty">${fmt(lot.inboundQty)}개</span>
+      </label>`).join('');
+      const linkTone = a.mismatchLots.length || a.orphanDetails.length ? 'warn' : '';
+      const detailRows = [...a.details].sort((x, y) => (y.date?.getTime() || 0) - (x.date?.getTime() || 0));
+      const sharedLotMax = Math.max(...a.lots.map(lot => lot.inboundQty), 1);
+      const defectLotMax = Math.max(...a.lots.map(lot => lot.defect), 1);
+      const inspectionDetailTable = `<div class="table-wrap"><table><thead><tr><th>검수일</th><th>관리번호</th><th>SKU</th><th class="right">검수수량</th><th class="right">불량수량</th><th class="right">불량률</th><th>불량유형</th><th>원인</th><th>조치</th></tr></thead><tbody>${detailRows.map(row => {
+        const lot = a.lotById.get(row.managementNo);
+        return `<tr><td>${safeHtml(row.dateText || dateStr(row.date))}</td><td>${safeHtml(row.managementNo)}</td><td>${safeHtml(lot?.sku || '-')}</td><td class="right">${fmt(row.inspected)}</td><td class="right">${fmt(row.defect)}</td><td class="right">${pct(row.defect, row.inspected)}</td><td>${safeHtml(row.type || '-')}</td><td>${safeHtml(row.cause || '-')}</td><td>${safeHtml(row.action || '-')}</td></tr>`;
+      }).join('') || '<tr><td colspan="9" class="muted">표시할 검수 상세 데이터가 없습니다.</td></tr>'}</tbody></table></div>`;
+
+      grid(`
+        <article class="card full inspection-filter-toolbar" style="min-height:auto;padding:14px 18px;">
+          <div class="table-tools" style="margin:0;">
+            <div class="tool-left">
+              <strong style="font-size:13px;">관리번호</strong>
+              <div class="inspection-lot-filter" data-inspection-lot-filter>
+                <button type="button" class="inspection-lot-trigger" onclick="toggleInspectionLotMenu(event)" aria-expanded="${state.inspection.lotFilterOpen ? 'true' : 'false'}" aria-haspopup="true">
+                  <span><strong>로트 선택</strong><span>${safeHtml(selectionLabel)}</span></span><span class="inspection-lot-trigger-arrow">▾</span>
+                </button>
+                <div class="inspection-lot-panel" style="${state.inspection.lotFilterOpen ? '' : 'display:none;'}">
+                  <div class="inspection-lot-panel-head"><strong>표시할 로트 선택</strong><div class="inspection-lot-actions"><button type="button" onclick="setAllInspectionLots(true)">전체 선택</button><button type="button" onclick="setAllInspectionLots(false)">선택 해제</button></div></div>
+                  <div class="inspection-lot-checks">
+                    <label class="inspection-lot-check">
+                      <input id="inspectionAllLots" type="checkbox" ${allLotsSelected ? 'checked' : ''} onchange="setAllInspectionLots(this.checked)">
+                      <span class="inspection-lot-check-copy"><strong>전체 로트</strong><span>생산입고 시트의 모든 관리번호</span></span>
+                      <span class="inspection-lot-check-qty">${fmt(a.allLots.length)}건</span>
+                    </label>
+                    ${lotChecks || '<div class="empty">선택 가능한 로트가 없습니다.</div>'}
+                  </div>
+                  <div class="inspection-lot-selection-note">체크한 로트만 KPI 합계, 불량률, 세로 막대, 상세 내역에 공통 반영됩니다.</div>
+                </div>
+              </div>
+              <div class="pill">생산입고 ↔ 검수불량 · 관리번호 연결</div>
+            </div>
+            <span class="badge ${linkTone}">${a.mismatchLots.length || a.orphanDetails.length ? `연동 확인 ${fmt(a.mismatchLots.length + a.orphanDetails.length)}건` : `연동 일치 ${fmt(a.lots.length)}개 로트`}</span>
+          </div>
+        </article>
+
+        ${renderInspectionKpiCard({ title:'총 입고수량', sub:`${scopeLabel} · 생산입고 기준`, value:`${fmt(a.totalInbound)}개`, caption:`로트 ${fmt(a.lots.length)}건 · 최근 입고 ${dateStr(a.latestInboundDate)}`, tone:'inbound', badge:'운영 KPI', lots:a.lots, valueKey:'inboundQty', maxValue:sharedLotMax, scaleLabel:'공통 수량 축' })}
+        ${renderInspectionKpiCard({ title:'검수 완료', sub:`${scopeLabel} · 누적`, value:`${fmt(a.totalInspected)}개`, caption:`입고 ${fmt(a.totalInbound)}개 대비 ${pct(a.totalInspected,a.totalInbound)}`, tone:'complete', badge:`진행 ${pct(a.totalInspected,a.totalInbound)}`, lots:a.lots, valueKey:'inspected', maxValue:sharedLotMax, scaleLabel:'입고와 같은 축' })}
+        ${renderInspectionKpiCard({ title:'잔여 검수수량', sub:'입고수량 - 검수완료', value:`${fmt(a.remaining)}개`, caption:a.remaining > 0 ? `선택 로트의 남은 검수 ${fmt(a.remaining)}개` : '선택 로트 전체 검수 완료', tone:'remaining', badge:`잔여 ${pct(a.remaining,a.totalInbound)}`, badgeClass:a.remaining > 0 ? 'warn' : '', lots:a.lots, valueKey:'remaining', maxValue:sharedLotMax, scaleLabel:'입고와 같은 축' })}
+        ${renderInspectionKpiCard({ title:'누적 불량', sub:`${scopeLabel} · 검수불량 기준`, value:`${fmt(a.totalDefect)}개`, caption:`검수 ${fmt(a.totalInspected)}개 중 ${pct(a.totalDefect,a.totalInspected)}`, tone:'defect', badge:`불량률 ${pct(a.totalDefect,a.totalInspected)}`, badgeClass:a.totalDefect > 0 ? 'danger' : '', lots:a.lots, valueKey:'defect', maxValue:defectLotMax, scaleLabel:'클릭: 사유 구성 보기', onClick:'openInspectionDefectDetail(event)' })}
+
+        <article class="card wide"><div class="card-head"><div><div class="card-title">로트별 검수 진행</div><div class="card-sub">입고수량 대비 검수완료·잔여·불량률</div></div><span class="badge ${a.remaining > 0 ? 'warn' : ''}">전체 진행률 ${pct(a.totalInspected, a.totalInbound)}</span></div>${renderInspectionLotProgress(a.lots)}</article>
+
+        <article class="card side"><div class="card-head"><div><div class="card-title">선택기간 검수 요약</div><div class="card-sub">상단 기간 필터 · 검수일 기준</div></div><span class="badge">${safeHtml(document.getElementById('periodLabel').textContent)}</span></div><div class="issue-list">
+          <div class="issue"><div class="issue-icon">📅</div><div><strong>검수 진행일</strong><span>검수불량 시트의 입력 날짜</span></div><div class="issue-num">${fmt(a.periodDayCount)}일</div></div>
+          <div class="issue"><div class="issue-icon">🔍</div><div><strong>검수수량</strong><span>선택기간 합계</span></div><div class="issue-num">${fmt(a.periodInspected)}</div></div>
+          <div class="issue"><div class="issue-icon">!</div><div><strong>불량수량</strong><span>선택기간 합계</span></div><div class="issue-num">${fmt(a.periodDefect)}</div></div>
+          <div class="issue"><div class="issue-icon">%</div><div><strong>불량률</strong><span>불량수량 ÷ 검수수량</span></div><div class="issue-num">${pct(a.periodDefect, a.periodInspected)}</div></div>
+        </div><div class="inspection-source-note" style="margin-top:14px;">누적 KPI와 로트 카드는 선택한 관리번호의 전체 데이터 기준이며, 이 요약 카드는 상단 선택기간의 검수일 기준입니다.</div></article>
+
+        <article class="card full inspection-detail-card ${state.inspection.detailExpanded ? '' : 'is-collapsed'}">
+          <div class="card-head">
+            <div><div class="card-title">검수 상세 내역</div><div class="card-sub">검수불량 시트 · 최신 검수일 순</div></div>
+            <div class="inspection-detail-actions"><span class="badge">${fmt(detailRows.length)}행</span><button type="button" class="inspection-detail-toggle" aria-expanded="${state.inspection.detailExpanded}" onclick="toggleInspectionDetails()">${state.inspection.detailExpanded ? '접기' : '펼치기'} <span class="inspection-detail-toggle-arrow">▾</span></button></div>
+          </div>
+          ${state.inspection.detailExpanded ? inspectionDetailTable : ''}
+        </article>
+
+        ${renderInspectionDefectModal(a, scopeLabel)}
+      `);
+      const allLotsCheckbox = document.getElementById('inspectionAllLots');
+      if (allLotsCheckbox) allLotsCheckbox.indeterminate = !allLotsSelected && a.lots.length > 0;
     }
 
     function getInboundAnalysis() {
@@ -4647,6 +5509,8 @@
       // 좌측 통합 사이드바(nav.js)가 이 페이지 밖에서 관리되므로, 현재 탭을
       // location.hash에 반영해 새로고침/공유 링크/사이드바 활성 표시가 맞도록 한다.
       try { history.replaceState(null, '', '#' + state.tab); } catch (e) { location.hash = state.tab; }
+      ensureInspectionNavItem();
+      syncOperationNavActive();
       const [title, desc] = titles[state.tab];
       document.getElementById('pageTitle').textContent = title;
       document.getElementById('pageDesc').textContent = desc;
@@ -4655,6 +5519,7 @@
       else if (state.tab === 'shipping') renderShipping();
       else if (state.tab === 'coupang') renderCoupang();
       else if (state.tab === 'production') renderProduction();
+      else if (state.tab === 'inspection') renderInspection();
       else if (state.tab === 'payment') renderPayment();
       else if (state.tab === 'inbound') renderInbound();
       else if (state.tab === 'inboundManage') renderInboundManage();
@@ -4690,15 +5555,36 @@
       renderCurrentTab();
     };
 
+    function ensureInspectionNavItem() {
+      if (document.querySelector?.('a.fb-item[data-dept="operation"][data-item="inspection"]')) return;
+      const productionLink = document.querySelector?.('a.fb-item[data-dept="operation"][data-item="production"]');
+      if (!productionLink || !document.createElement) return;
+      const link = document.createElement('a');
+      link.className = 'fb-item';
+      link.dataset.dept = 'operation';
+      link.dataset.item = 'inspection';
+      link.setAttribute('href', '#inspection');
+      link.innerHTML = '<span class="fb-item-dot"></span><span>생산 입고·검수</span>';
+      productionLink.after(link);
+    }
+
+    function syncOperationNavActive() {
+      document.querySelectorAll?.('a.fb-item[data-dept="operation"][data-item]').forEach(link => {
+        link.classList.toggle('active', link.dataset.item === state.tab);
+      });
+    }
+
     // 로컬 HTML 미리보기에서도 Operation 메뉴가 배포 사이트로 이동하지 않도록
     // 공통 사이드바의 절대주소를 현재 파일 내부 해시 링크로 바꿉니다.
     function keepOperationLinksLocal(root = document) {
+      ensureInspectionNavItem();
       root.querySelectorAll?.('a.fb-item[data-dept="operation"][data-item]').forEach(link => {
         const tab = link.dataset.item;
         if (!titles[tab]) return;
         link.setAttribute('href', `#${tab}`);
         link.removeAttribute('target');
       });
+      syncOperationNavActive();
     }
 
     document.addEventListener('click', event => {
